@@ -8,12 +8,12 @@ esphome:
   name: "truma"
 
 external_components:
-  - source: 
+  - source:
       type: git
       url: https://github.com/havanti/esphome-truma.git
     components: [truma_inetbox, uart]
     refresh: 0s
-     
+
 esp32:
   board: esp32-s3-devkitc-1
   variant: esp32s3
@@ -21,19 +21,19 @@ esp32:
     type: esp-idf
     version: recommended
     sdkconfig_options:
-      # PSRAM (OPI/OctalSPI für N16R8)
+      # PSRAM (OPI/OctalSPI for N16R8)
       CONFIG_SPIRAM: "y"
       CONFIG_SPIRAM_MODE_OCT: "y"
       CONFIG_SPIRAM_SPEED_80M: "y"
       CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
       CONFIG_SPIRAM_RODATA: "y"
-      # BLE Stack in PSRAM auslagern
+      # Offload BLE stack to PSRAM
       CONFIG_BT_ALLOCATION_FROM_SPIRAM_FIRST: "y"
       CONFIG_BT_BLE_DYNAMIC_ENV_MEMORY: "y"
-    
+
 logger:
   level: DEBUG
-  baud_rate: 115200 
+  baud_rate: 115200
 
 api:
   encryption:
@@ -58,6 +58,12 @@ wifi:
   on_disconnect:
     - logger.log: "WiFi DISCONNECTED"
 
+globals:
+  - id: decoking_remaining
+    type: int
+    restore_value: false
+    initial_value: '0'
+
 interval:
   - interval: 5min
     startup_delay: 2min
@@ -67,15 +73,24 @@ interval:
             not:
               wifi.connected:
           then:
-            - logger.log: "WiFi verloren → Soft-Reconnect"
+            - logger.log: "WiFi lost → Soft-Reconnect"
             - wifi.disable:
             - delay: 5s
             - wifi.enable:
+  - interval: 1min
+    then:
+      - if:
+          condition:
+            lambda: 'return id(decoking_remaining) > 0;'
+          then:
+            - lambda: |-
+                id(decoking_remaining) -= 1;
+                id(decoking_timer_sensor).publish_state(id(decoking_remaining));
 
 uart:
   - id: lin_uart_bus
-    tx_pin: GPIO18   # War GPIO17 – jetzt PSRAM-konfliktfrei
-    rx_pin: GPIO8    # War GPIO16 – jetzt PSRAM-konfliktfrei
+    tx_pin: GPIO18   # Was GPIO17 – PSRAM-conflict-free
+    rx_pin: GPIO8    # Was GPIO16 – PSRAM-conflict-free
     baud_rate: 9600
     data_bits: 8
     parity: NONE
@@ -85,6 +100,86 @@ time:
   - platform: homeassistant
     id: homeassistant_time
 
+# ─── BLE ────────────────────────────────────────────────────────────────────
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+    active: false
+  on_ble_advertise:
+    - mac_address: "00:00:00:00:00:00"  # Front Left – replace with your sensor MAC
+      then:
+        - lambda: |-
+            for (auto data : x.get_manufacturer_datas()) {
+              if (data.data.size() >= 3) {
+                uint16_t mfr_id    = data.uuid.get_uuid().uuid.uuid16;
+                float battery      = ((mfr_id >> 8) & 0xFF) * 0.1f;
+                float temperature  = (float)data.data[0];
+                uint16_t raw_pres  = (data.data[1] << 8) | data.data[2];
+                float pressure_bar = (raw_pres / 10.0f - 14.696f) / 14.5038f;
+                if (pressure_bar > 0.5f) {
+                  id(tpms_fl_battery).publish_state(battery);
+                  id(tpms_fl_temperature).publish_state(temperature);
+                  id(tpms_fl_pressure).publish_state(pressure_bar);
+                }
+              }
+            }
+    - mac_address: "00:00:00:00:00:00"  # Front Right – replace with your sensor MAC
+      then:
+        - lambda: |-
+            for (auto data : x.get_manufacturer_datas()) {
+              if (data.data.size() >= 3) {
+                uint16_t mfr_id    = data.uuid.get_uuid().uuid.uuid16;
+                float battery      = ((mfr_id >> 8) & 0xFF) * 0.1f;
+                float temperature  = (float)data.data[0];
+                uint16_t raw_pres  = (data.data[1] << 8) | data.data[2];
+                float pressure_bar = (raw_pres / 10.0f - 14.696f) / 14.5038f;
+                if (pressure_bar > 0.5f) {
+                  id(tpms_fr_battery).publish_state(battery);
+                  id(tpms_fr_temperature).publish_state(temperature);
+                  id(tpms_fr_pressure).publish_state(pressure_bar);
+                }
+              }
+            }
+    - mac_address: "00:00:00:00:00:00"  # Rear Right – replace with your sensor MAC
+      then:
+        - lambda: |-
+            for (auto data : x.get_manufacturer_datas()) {
+              if (data.data.size() >= 3) {
+                uint16_t mfr_id    = data.uuid.get_uuid().uuid.uuid16;
+                float battery      = ((mfr_id >> 8) & 0xFF) * 0.1f;
+                float temperature  = (float)data.data[0];
+                uint16_t raw_pres  = (data.data[1] << 8) | data.data[2];
+                float pressure_bar = (raw_pres / 10.0f - 14.696f) / 14.5038f;
+                if (pressure_bar > 0.5f) {
+                  id(tpms_rr_battery).publish_state(battery);
+                  id(tpms_rr_temperature).publish_state(temperature);
+                  id(tpms_rr_pressure).publish_state(pressure_bar);
+                }
+              }
+            }
+    - mac_address: "00:00:00:00:00:00"  # Rear Left – replace with your sensor MAC
+      then:
+        - lambda: |-
+            for (auto data : x.get_manufacturer_datas()) {
+              if (data.data.size() >= 3) {
+                uint16_t mfr_id    = data.uuid.get_uuid().uuid.uuid16;
+                float battery      = ((mfr_id >> 8) & 0xFF) * 0.1f;
+                float temperature  = (float)data.data[0];
+                uint16_t raw_pres  = (data.data[1] << 8) | data.data[2];
+                float pressure_bar = (raw_pres / 10.0f - 14.696f) / 14.5038f;
+                if (pressure_bar > 0.5f) {
+                  id(tpms_rl_battery).publish_state(battery);
+                  id(tpms_rl_temperature).publish_state(temperature);
+                  id(tpms_rl_pressure).publish_state(pressure_bar);
+                }
+              }
+            }
+
+bluetooth_proxy:
+  active: false
+
+# ─── Truma ──────────────────────────────────────────────────────────────────
 truma_inetbox:
   uart_id: lin_uart_bus
   lin_checksum: VERSION_2
@@ -93,7 +188,6 @@ climate:
   - platform: truma_inetbox
     name: "Room"
     type: ROOM
-    
   - platform: truma_inetbox
     name: "Water"
     type: WATER
@@ -102,120 +196,225 @@ binary_sensor:
   - platform: truma_inetbox
     name: "CP Plus alive"
     type: CP_PLUS_CONNECTED
-
   - platform: truma_inetbox
     name: "Heater has error"
     type: HEATER_HAS_ERROR
-
   - platform: truma_inetbox
     name: "Room Heater active"
     type: HEATER_ROOM
     id: HEATER_ROOM
-
   - platform: truma_inetbox
     name: "Water Heater active"
     type: HEATER_WATER
     id: HEATER_WATER
-
   - platform: truma_inetbox
     name: "Heater mode Diesel"
     type: HEATER_DIESEL
-
   - platform: truma_inetbox
     name: "Heater mode Mix 1"
     type: HEATER_MIX_1
-  
   - platform: truma_inetbox
     name: "Heater mode Mix 2"
     type: HEATER_MIX_2
-  
   - platform: truma_inetbox
     name: "Heater mode Electric"
     type: HEATER_ELECTRICITY
-
   - platform: truma_inetbox
     name: "Timer active"
     type: TIMER_ACTIVE
     id: TIMER_ACTIVE
-
   - platform: truma_inetbox
     name: "Timer Room Heater active"
     type: TIMER_ROOM
-
   - platform: truma_inetbox
     name: "Timer Water Heater active"
-    type: TIMER_WATER    
+    type: TIMER_WATER
 
-number:  
+number:
   - platform: truma_inetbox
     name: "Target Room Temperature"
     type: TARGET_ROOM_TEMPERATURE
- 
   - platform: truma_inetbox
     name: "Target Water Temperature"
     type: TARGET_WATER_TEMPERATURE
- 
   - platform: truma_inetbox
     name: "Electric Power Level"
     type: ELECTRIC_POWER_LEVEL
 
 sensor:
+  # Truma
   - platform: truma_inetbox
     name: "Current Room Temperature"
     type: CURRENT_ROOM_TEMPERATURE
-
   - platform: truma_inetbox
     name: "Current Water Temperature"
     type: CURRENT_WATER_TEMPERATURE
-
   - platform: truma_inetbox
     name: "Target Room Temperature"
     type: TARGET_ROOM_TEMPERATURE
-
   - platform: truma_inetbox
     name: "Target Water Temperature"
     type: TARGET_WATER_TEMPERATURE
-
   - platform: truma_inetbox
     name: "Heater Error Code"
     type: HEATER_ERROR_CODE
-
   - platform: truma_inetbox
     name: "Heating Mode"
     type: HEATING_MODE
-
   - platform: truma_inetbox
     name: "Electric Power Level"
     type: ELECTRIC_POWER_LEVEL
-
   - platform: truma_inetbox
     name: "Energy Mix"
     type: ENERGY_MIX
-
   - platform: truma_inetbox
     name: "Operating Status"
     type: OPERATING_STATUS
-
+  # System
   - platform: internal_temperature
-    name: "ESP32 Internal Temperature"    
- 
+    name: "TR ESP32 Temperature"
   - platform: wifi_signal
-    name: "WiFi Signal dB"
+    name: "TR WiFi Signal dB"
     id: wifi_signal_db
     update_interval: 60s
     entity_category: "diagnostic"
-
   - platform: copy
     source_id: wifi_signal_db
-    name: "WiFi Signal"
+    name: "TR WiFi Signal"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "Signal %"
     entity_category: "diagnostic"
     device_class: ""
-
   - platform: uptime
-    name: "Uptime"
+    name: Uptime Sensor
+  # Diesel De-coking
+  - platform: template
+    name: "Diesel De-coking Remaining Time"
+    id: decoking_timer_sensor
+    unit_of_measurement: "min"
+    accuracy_decimals: 0
+    icon: mdi:timer-outline
+    state_class: measurement
+  # TPMS Front Left
+  - platform: template
+    name: "TPMS Front Left Pressure"
+    id: tpms_fl_pressure
+    unit_of_measurement: "bar"
+    accuracy_decimals: 2
+    icon: mdi:tire
+    device_class: pressure
+    state_class: measurement
+  - platform: template
+    name: "TPMS Front Left Temperature"
+    id: tpms_fl_temperature
+    unit_of_measurement: "°C"
+    accuracy_decimals: 0
+    icon: mdi:thermometer
+    device_class: temperature
+    state_class: measurement
+  - platform: template
+    name: "TPMS Front Left Battery"
+    id: tpms_fl_battery
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    icon: mdi:battery
+    device_class: voltage
+    state_class: measurement
+  # TPMS Front Right
+  - platform: template
+    name: "TPMS Front Right Pressure"
+    id: tpms_fr_pressure
+    unit_of_measurement: "bar"
+    accuracy_decimals: 2
+    icon: mdi:tire
+    device_class: pressure
+    state_class: measurement
+  - platform: template
+    name: "TPMS Front Right Temperature"
+    id: tpms_fr_temperature
+    unit_of_measurement: "°C"
+    accuracy_decimals: 0
+    icon: mdi:thermometer
+    device_class: temperature
+    state_class: measurement
+  - platform: template
+    name: "TPMS Front Right Battery"
+    id: tpms_fr_battery
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    icon: mdi:battery
+    device_class: voltage
+    state_class: measurement
+  # TPMS Rear Right
+  - platform: template
+    name: "TPMS Rear Right Pressure"
+    id: tpms_rr_pressure
+    unit_of_measurement: "bar"
+    accuracy_decimals: 2
+    icon: mdi:tire
+    device_class: pressure
+    state_class: measurement
+  - platform: template
+    name: "TPMS Rear Right Temperature"
+    id: tpms_rr_temperature
+    unit_of_measurement: "°C"
+    accuracy_decimals: 0
+    icon: mdi:thermometer
+    device_class: temperature
+    state_class: measurement
+  - platform: template
+    name: "TPMS Rear Right Battery"
+    id: tpms_rr_battery
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    icon: mdi:battery
+    device_class: voltage
+    state_class: measurement
+  # TPMS Rear Left
+  - platform: template
+    name: "TPMS Rear Left Pressure"
+    id: tpms_rl_pressure
+    unit_of_measurement: "bar"
+    accuracy_decimals: 2
+    icon: mdi:tire
+    device_class: pressure
+    state_class: measurement
+  - platform: template
+    name: "TPMS Rear Left Temperature"
+    id: tpms_rl_temperature
+    unit_of_measurement: "°C"
+    accuracy_decimals: 0
+    icon: mdi:thermometer
+    device_class: temperature
+    state_class: measurement
+  - platform: template
+    name: "TPMS Rear Left Battery"
+    id: tpms_rl_battery
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    icon: mdi:battery
+    device_class: voltage
+    state_class: measurement
+
+script:
+  - id: script_diesel_decoking
+    then:
+      - select.set:
+          id: select_energy_mix
+          option: "Diesel"
+      - truma_inetbox.heater.set_target_room_temperature:
+          temperature: 30
+          heating_mode: HIGH
+      - lambda: |-
+          id(decoking_remaining) = 45;
+          id(decoking_timer_sensor).publish_state(45);
+      - delay: 45min
+      - truma_inetbox.heater.set_target_room_temperature:
+          temperature: 0
+      - lambda: |-
+          id(decoking_remaining) = 0;
+          id(decoking_timer_sensor).publish_state(0);
 
 switch:
   - platform: template
@@ -230,7 +429,6 @@ switch:
     turn_off_action:
       - truma_inetbox.heater.set_target_room_temperature:
           temperature: 0
- 
   - platform: template
     name: "Activate Water Heater"
     lambda: |-
@@ -241,7 +439,6 @@ switch:
     turn_off_action:
       - truma_inetbox.heater.set_target_water_temperature:
           temperature: 0
-  
   - platform: template
     name: "Activate Water Heater (enum)"
     lambda: |-
@@ -251,7 +448,6 @@ switch:
           temperature: BOOST
     turn_off_action:
       - truma_inetbox.heater.set_target_water_temperature_enum: "OFF"
-  
   - platform: template
     name: "Activate Timer"
     lambda: |-
@@ -271,28 +467,34 @@ switch:
 select:
   - platform: truma_inetbox
     name: "Energy Mix"
+    id: select_energy_mix
     type: HEATER_ENERGY_MIX_DIESEL
-
   - platform: truma_inetbox
     name: "Fan Mode"
     type: HEATER_FAN_MODE_COMBI
+
+button:
+  - platform: restart
+    name: "Truma ESP Restart"
+    id: restart_button
+  - platform: template
+    name: "Start Diesel De-coking"
+    icon: mdi:fire
+    on_press:
+      - script.execute: script_diesel_decoking
+  - platform: template
+    name: "Abort Diesel De-coking"
+    icon: mdi:stop
+    on_press:
+      - script.stop: script_diesel_decoking
+      - truma_inetbox.heater.set_target_room_temperature:
+          temperature: 0
+      - lambda: |-
+          id(decoking_remaining) = 0;
+          id(decoking_timer_sensor).publish_state(0);
 
 web_server:
   port: 80
   local: true
   version: 3
   include_internal: true
-  
-# Optional: Bluetooth Proxy (uncomment to enable)
-# esp32_ble_tracker:
-#   scan_parameters:
-#     interval: 1100ms
-#     window: 1100ms
-#     active: false
-
-# bluetooth_proxy:
-#   active: true
-
-button:
-  - platform: restart
-    name: "Restart ESP32"
