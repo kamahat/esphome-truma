@@ -1,4 +1,4 @@
-# ESPHome & Truma CP Plus — smart heating and more for the open road 🚐
+# ESPHome & Truma CP Plus — smart heating and more 🚐
 
 🇩🇪 Deutsch | [🇬🇧 English](README.en.md)
 
