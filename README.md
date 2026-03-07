@@ -55,6 +55,28 @@ In Home Assistant werden zwei Schaltflächen bereitgestellt:
 
 Ein Template-Sensor (Diesel De-coking Remaining Time, Einheit: min) zeigt die verbleibende Zeit an und ist im Home-Assistant-Dashboard sowie in der integrierten Web-UI sichtbar.
 
+### Onboard RGB-LED — visuelle Statusanzeige (ESP32-S3)
+
+Das [Waveshare ESP32-S3-DEV-KIT-N8R8](https://www.waveshare.com/wiki/ESP32-S3-DEV-KIT-N8R8) und viele weitere ESP32-S3-Entwicklerboards verfügen über eine integrierte WS2812-RGB-LED (GPIO38), die ohne zusätzliche Hardware als visuelle Statusanzeige für den LIN-Bus genutzt werden kann.
+
+Die Beispielkonfiguration nutzt diese LED mit zwei Signalen:
+
+| Signal | Bedeutung |
+|---|---|
+| Grün blinkt (alle 2 s, 500 ms) | CP Plus verbunden — LIN-Bus aktiv |
+| Blau blitzt (300 ms) | TX-Kommando an Heizung gesendet |
+| Aus | CP Plus nicht verbunden |
+
+**Vorteile gegenüber einer reinen Home-Assistant-Anzeige:**
+
+- Sofortige visuelle Rückmeldung direkt am Gerät, ohne App oder Dashboard
+- Erkennbar ob der ESP überhaupt kommuniziert, bevor WiFi oder HA verfügbar ist
+- Hilfreich bei der Erstinbetriebnahme und Fehlersuche vor Ort
+
+**Hinweis zum 90-Sekunden-Timeout:** Der `CP_PLUS_CONNECTED`-Sensor meldet `false` erst 90 Sekunden nach dem letzten empfangenen LIN-Paket. Wird das CP Plus physisch getrennt, bleibt die LED daher noch bis zu 90 Sekunden grün — das ist das designierte Verhalten des LIN-Bus-Protokolls, das kurze Verbindungsunterbrechungen tolerieren soll.
+
+Die Implementierung verwendet zwei ESPHome-Globals (`led_color`, `led_ticks`) und ein 100-ms-Intervall als LED-Treiber, sodass andere Intervalle (Alive-Anzeige) und Switch-Aktionen (TX-Kommandos) die LED durch einfaches Setzen dieser Variablen ansteuern können.
+
 ### Feinabstimmung, Überwachung & Stabilität
 
 Die Beispielkonfiguration enthält eine Reihe produktionserprobter Einstellungen, die im Basisbeispiel nicht enthalten sind:
@@ -99,6 +121,7 @@ Erfordert ESPHome >= 2026.2.2.
 | LIN UART TX-Pin | GPIO17 | GPIO18 (vermeidet PSRAM-Pin-Konflikt) |
 | LIN UART RX-Pin | GPIO16 | GPIO8 (vermeidet PSRAM-Pin-Konflikt) |
 | Mindest-Chip-Revision | optional (`CONFIG_ESP32_REV_MIN`, auskommentiert) | keine Einschränkung |
+| Onboard RGB-LED | nicht vorhanden | WS2812, GPIO38, LIN-Bus-Statusanzeige |
 | Log-Level | `DEBUG` | `DEBUG` |
 
 ESP32-Datei verwenden, wenn ein Standard-ESP32 (WROOM-32, DevKit usw.) ohne PSRAM vorhanden ist.
