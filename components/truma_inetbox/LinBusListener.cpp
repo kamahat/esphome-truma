@@ -396,7 +396,10 @@ void LinBusListener::process_log_queue(TickType_t xTicksToWait) {
         if (log_msg.len == 0) {
           ESP_LOGV(TAG, "PID %02X      order no answer", current_PID);
         } else if (log_msg.len < 8) {
-          ESP_LOGW(TAG, "PID %02X      %s partial data received", current_PID,
+          // Logged at VERBOSE: on ESP32-S3 the UART hardware clears the FIFO on break detection,
+          // causing the last byte (CRC) of shorter LIN frames to be lost consistently.
+          // These frames are typically from non-Truma devices and are not processed by the app.
+          ESP_LOGV(TAG, "PID %02X      %s partial data received", current_PID,
                    format_hex_pretty((const uint8_t*)log_msg.data, (size_t)log_msg.len).c_str());
         }
         break;
