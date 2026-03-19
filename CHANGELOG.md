@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — Example configurations and documentation
+
+### Added
+
+#### `ESP32_truma_6DE_Gas_example.yaml` / `ESP32-S3_truma_6DE_Gas_example.yaml` (new)
+- Gas variant of the example configurations using `HEATER_GAS` and `HEATER_ENERGY_MIX_GAS`
+- Diesel-„Entkokung"/Rückstandsverbrennung script, sensor and buttons omitted (gas-only operation)
+
+### Changed
+
+#### `ESP32_truma_6DE_example.yaml` → `ESP32_truma_6DE_Diesel_example.yaml`
+#### `ESP32-S3_truma_6DE_example.yaml` → `ESP32-S3_truma_6DE_Diesel_example.yaml`
+- Renamed to make the diesel variant explicit
+
+#### `components/truma_inetbox/__init__.py` / `components/uart/__init__.py`
+- Added `synchronous=True` to all `register_action()` calls
+  (ESPHome 2026.3.0 requires this parameter; all `play()` methods are synchronous)
+
+#### `README.md` / `README.en.md`
+- Restructured example configuration section into 2-step selection (energy mix → hardware)
+- Added Gas/Diesel variant overview table
+- Added Truma Combi 4 compatibility note
+- Added compatibility disclaimer: tested with Truma Combi 6DE (2018, Eberspächer burner);
+  newer Truma diesel generations without Eberspächer not verified
+- Removed upstream intro paragraph (originated from Fabian-Schmidt repo)
+- Editorial cleanup
+
+---
+
 ## [Unreleased] — ESPHome 2026.6 Compatibility (deprecation follow-up)
 
 ### Changed
