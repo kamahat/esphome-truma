@@ -102,8 +102,8 @@ Neustart-Schaltfläche — Eine Ein-Klick-ESP-Neustart-Schaltfläche ist in Home
 
 ## Beispielkonfigurationen
 
-Dieses Repository stellt vier gebrauchsfertige Beispielkonfigurationen für das Truma Combi 6DE Heizgerät bereit.
-Die Konfigurationen sollten ebenso mit der Truma Combi 4 funktionieren, da beide Geräte dasselbe LIN-Bus-Protokoll über das CP Plus verwenden.
+Dieses Repository stellt vier gebrauchsfertige Beispielkonfigurationen für die Truma Combi 4 und 6DE bereit.
+Die Gas-Varianten sind für Combi 4 und 6DE ausgelegt; die Diesel-Varianten (6DE) enthalten zusätzlich die Diesel-„Entkokung"/Rückstandsverbrennung.
 Alle verwenden das ESP-IDF-Framework und beziehen die Komponente direkt aus diesem Repository.
 Erfordert ESPHome >= 2026.3.0.
 
@@ -111,7 +111,7 @@ Erfordert ESPHome >= 2026.3.0.
 
 ### Schritt 1: Energiemix-Variante wählen
 
-Die Truma Combi 6DE kann entweder mit **Gas** oder mit **Diesel** betrieben werden. Je nach Fahrzeugausstattung die passende Variante wählen:
+Die Truma Combi 4 und 6DE können mit **Gas** betrieben werden; die 6DE zusätzlich mit **Diesel**. Je nach Fahrzeugausstattung die passende Variante wählen:
 
 | Variante | ESP32 | ESP32-S3 |
 |---|---|---|

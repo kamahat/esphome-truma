@@ -102,8 +102,8 @@ Restart button — A one-click ESP restart button is exposed in Home Assistant f
 
 ## Example configurations
 
-This repository provides four ready-to-use example configurations for the Truma Combi 6DE heater.
-The configurations should also work with the Truma Combi 4, as both devices use the same LIN bus protocol via the CP Plus.
+This repository provides four ready-to-use example configurations for the Truma Combi 4 and 6DE.
+The gas variants target both the Combi 4 and 6DE; the diesel variants (6DE) additionally include the diesel "de-coking" / residue combustion script.
 All use the ESP-IDF framework and pull the component directly from this repository.
 Requires ESPHome >= 2026.3.0.
 
@@ -111,7 +111,7 @@ Requires ESPHome >= 2026.3.0.
 
 ### Step 1: Choose the energy mix variant
 
-The Truma Combi 6DE can be operated with either **gas** or **diesel**. Choose the variant that matches your vehicle:
+The Truma Combi 4 and 6DE can be operated with **gas**; the 6DE additionally with **diesel**. Choose the variant that matches your vehicle:
 
 | Variant | ESP32 | ESP32-S3 |
 |---|---|---|
