@@ -108,7 +108,7 @@ Neustart-Schaltfläche — Eine Ein-Klick-ESP-Neustart-Schaltfläche ist in Home
 
 Dieses Repository stellt zwei gebrauchsfertige Beispielkonfigurationen für das Truma Combi 6DE Heizgerät bereit.
 Beide verwenden das ESP-IDF-Framework und beziehen die Komponente direkt aus diesem Repository.
-Erfordert ESPHome >= 2026.2.2.
+Erfordert ESPHome >= 2026.3.0.
 
 ### Die richtige Datei wählen
 
@@ -198,7 +198,7 @@ Dieses Projekt enthält die folgenden ESPHome-Komponenten:
   - `fault_pin` (optional) wenn der Pin des LIN-Treiber-Chips verbunden ist.
   - `on_heater_message` (optional) [ESPHome-Trigger](https://esphome.io/guides/automations.html) wenn eine Nachricht vom CP Plus empfangen wird.
 
-Erfordert ESPHome 2026.2.2 oder höher.
+Erfordert ESPHome 2026.3.0 oder höher.
 
 ### Binary Sensor
 

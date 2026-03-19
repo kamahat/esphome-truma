@@ -108,7 +108,7 @@ Restart button — A one-click ESP restart button is exposed in Home Assistant f
 
 This repository provides two ready-to-use example configurations for the Truma Combi 6DE heater.
 Both use the ESP-IDF framework and pull the component directly from this repository.
-Requires ESPHome >= 2026.2.2.
+Requires ESPHome >= 2026.3.0.
 
 ### Choosing the right file
 
@@ -200,7 +200,7 @@ This project contains the following ESPHome components:
   - `fault_pin` (optional) if you connect the pin of your lin driver chip.
   - `on_heater_message` (optional) [ESPHome Trigger](https://esphome.io/guides/automations.html) when a message from CP Plus is recieved.
 
-Requires ESPHome 2026.2.2 or higher.
+Requires ESPHome 2026.3.0 or higher.
 
 ### Binary sensor
 
