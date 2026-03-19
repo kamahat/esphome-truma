@@ -108,12 +108,16 @@ Erfordert ESPHome >= 2026.3.0.
 
 **Unterstützte Modelle:**
 
-| Modell         | Brennstoff       | Anmerkung                                                                                  |
-| -------------- | ---------------- | ------------------------------------------------------------------------------------------ |
-| Combi 4 / 6    | Gas              | Flüssiggas-Warmluftheizung mit 10-Liter-Boiler; Heizen/Wasser parallel oder separat.      |
-| Combi 4E / 6E  | Gas + Elektro    | Wie oben + 230-V-Heizstäbe; Modi: Gas, Elektro oder Hybrid (schnelleres Aufheizen).       |
-| Combi Diesel   | Diesel           | Diesel aus Tank + 12 V; Boiler integriert.                                                 |
-| Combi Diesel E | Diesel + Elektro | Wie oben + 230-V-Heizstäbe für Hybridbetrieb.                                             |
+| Modell      | Leistung | Brennstoff          | Elektro (230 V) | Boiler | Besonderheiten                        |
+| ----------- | -------- | ------------------- | --------------- | ------ | ------------------------------------- |
+| Combi 4     | ~4 kW    | Gas (Propan/Butan)  | ❌              | 10 L   | Standardmodell für kleinere Fahrzeuge |
+| Combi 6     | ~6 kW    | Gas (Propan/Butan)  | ❌              | 10 L   | Mehr Leistung für größere Fahrzeuge   |
+| Combi 4E    | ~4 kW    | Gas                 | ✅              | 10 L   | Elektro-, Gas- oder Hybridbetrieb     |
+| Combi 6E    | ~6 kW    | Gas                 | ✅              | 10 L   | Schnelleres Aufheizen im Hybridmodus  |
+| Combi D 4   | ~4 kW    | Diesel              | ❌              | 10 L   | Nutzung des Fahrzeugtanks             |
+| Combi D 6   | ~6 kW    | Diesel              | ❌              | 10 L   | Für größere Diesel-Fahrzeuge          |
+| Combi D 4 E | ~4 kW    | Diesel              | ✅              | 10 L   | Hybridbetrieb möglich                 |
+| Combi D 6 E | ~6 kW    | Diesel              | ✅              | 10 L   | Maximale Flexibilität                 |
 
 > **Hinweis zur Kompatibilität:** Entwickelt und getestet mit einer Truma Combi 6DE (Baujahr 2018, Eberspächer-Brenner). Ob andere Modelle und insbesondere neuere Diesel-Generationen mit einem von Truma selbst entwickelten Brenner (ohne Eberspächer) ebenfalls kompatibel sind, ist nicht sichergestellt. Rückmeldungen dazu sind sehr willkommen — bitte ein [GitHub Issue](https://github.com/havanti/esphome-truma/issues) öffnen.
 

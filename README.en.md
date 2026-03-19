@@ -108,12 +108,16 @@ Requires ESPHome >= 2026.3.0.
 
 **Supported models:**
 
-| Model          | Fuel             | Notes                                                                                      |
-| -------------- | ---------------- | ------------------------------------------------------------------------------------------ |
-| Combi 4 / 6    | Gas              | Liquid gas warm-air heater with 10-litre boiler; heating/water parallel or separate.      |
-| Combi 4E / 6E  | Gas + Electric   | As above + 230 V heating elements; modes: gas, electric or hybrid (faster warm-up).       |
-| Combi Diesel   | Diesel           | Diesel from vehicle tank + 12 V; integrated boiler.                                       |
-| Combi Diesel E | Diesel + Electric| As above + 230 V heating elements for hybrid operation.                                   |
+| Model       | Output | Fuel               | Electric (230 V) | Boiler | Notes                                  |
+| ----------- | ------ | ------------------ | ---------------- | ------ | -------------------------------------- |
+| Combi 4     | ~4 kW  | Gas (propane/butane) | ❌             | 10 L   | Standard model for smaller vehicles    |
+| Combi 6     | ~6 kW  | Gas (propane/butane) | ❌             | 10 L   | More output for larger vehicles        |
+| Combi 4E    | ~4 kW  | Gas                | ✅               | 10 L   | Electric, gas or hybrid operation      |
+| Combi 6E    | ~6 kW  | Gas                | ✅               | 10 L   | Faster warm-up in hybrid mode          |
+| Combi D 4   | ~4 kW  | Diesel             | ❌               | 10 L   | Uses vehicle fuel tank                 |
+| Combi D 6   | ~6 kW  | Diesel             | ❌               | 10 L   | For larger diesel vehicles             |
+| Combi D 4 E | ~4 kW  | Diesel             | ✅               | 10 L   | Hybrid operation possible              |
+| Combi D 6 E | ~6 kW  | Diesel             | ✅               | 10 L   | Maximum flexibility                    |
 
 > **Compatibility note:** Developed and tested with a Truma Combi 6DE (2018 model year, Eberspächer burner). Whether other models — in particular newer diesel generations with a burner developed by Truma themselves (without Eberspächer) — are also compatible has not been verified. Feedback on this is very welcome — please open a [GitHub Issue](https://github.com/havanti/esphome-truma/issues).
 
