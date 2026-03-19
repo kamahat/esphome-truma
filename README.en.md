@@ -108,16 +108,16 @@ Requires ESPHome >= 2026.3.0.
 
 **Supported models:**
 
-| Model       | Output | Fuel               | Electric (230 V) | Boiler | Notes                                  |
-| ----------- | ------ | ------------------ | ---------------- | ------ | -------------------------------------- |
-| Combi 4     | ~4 kW  | Gas (propane/butane) | ❌             | 10 L   | Standard model for smaller vehicles    |
-| Combi 6     | ~6 kW  | Gas (propane/butane) | ❌             | 10 L   | More output for larger vehicles        |
-| Combi 4E    | ~4 kW  | Gas                | ✅               | 10 L   | Electric, gas or hybrid operation      |
-| Combi 6E    | ~6 kW  | Gas                | ✅               | 10 L   | Faster warm-up in hybrid mode          |
-| Combi D 4   | ~4 kW  | Diesel             | ❌               | 10 L   | Uses vehicle fuel tank                 |
-| Combi D 6   | ~6 kW  | Diesel             | ❌               | 10 L   | For larger diesel vehicles             |
-| Combi D 4 E | ~4 kW  | Diesel             | ✅               | 10 L   | Hybrid operation possible              |
-| Combi D 6 E | ~6 kW  | Diesel             | ✅               | 10 L   | Maximum flexibility                    |
+| Model           | Output          | Fuel                 | Electric (230 V) | Boiler | Notes                           |
+| --------------- | --------------- | -------------------- | ---------------- | ------ | ------------------------------- |
+| Combi 4         | ~4 kW           | Gas (propane/butane) | ❌               | 10 L   | Standard for smaller vehicles   |
+| Combi 6         | ~6 kW           | Gas (propane/butane) | ❌               | 10 L   | More output for larger vehicles |
+| Combi 4E        | ~4 kW (+Hybrid) | Gas                  | ✅               | 10 L   | Electric, gas or hybrid         |
+| Combi 6E        | ~6 kW (+Hybrid) | Gas                  | ✅               | 10 L   | Faster warm-up                  |
+| Combi Diesel 4  | ~4 kW           | Diesel               | ❌               | 10 L   | From vehicle fuel tank          |
+| Combi Diesel 6  | ~6 kW           | Diesel               | ❌               | 10 L   | For larger diesel vehicles      |
+| Combi Diesel 4E | ~4 kW (+Hybrid) | Diesel               | ✅               | 10 L   | Hybrid operation possible       |
+| Combi Diesel 6E | ~6 kW (+Hybrid) | Diesel               | ✅               | 10 L   | Maximum flexibility             |
 
 > **Compatibility note:** Developed and tested with a Truma Combi 6DE (2018 model year, Eberspächer burner). Whether other models — in particular newer diesel generations with a burner developed by Truma themselves (without Eberspächer) — are also compatible has not been verified. Feedback on this is very welcome — please open a [GitHub Issue](https://github.com/havanti/esphome-truma/issues).
 
