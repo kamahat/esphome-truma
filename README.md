@@ -108,16 +108,16 @@ Erfordert ESPHome >= 2026.3.0.
 
 **Unterstützte Modelle:**
 
-| Modell          | Leistung        | Brennstoff         | Elektro (230 V) | Boiler | Besonderheiten                      |
-| --------------- | --------------- | ------------------ | --------------- | ------ | ----------------------------------- |
-| Combi 4         | ~4 kW           | Gas (Propan/Butan) | ❌              | 10 L   | Standard für kleinere Fahrzeuge     |
-| Combi 6         | ~6 kW           | Gas (Propan/Butan) | ❌              | 10 L   | Mehr Leistung für größere Fahrzeuge |
-| Combi 4E        | ~4 kW (+Hybrid) | Gas                | ✅              | 10 L   | Elektro-, Gas- oder Hybrid          |
-| Combi 6E        | ~6 kW (+Hybrid) | Gas                | ✅              | 10 L   | Schnelleres Aufheizen               |
-| Combi Diesel 4  | ~4 kW           | Diesel             | ❌              | 10 L   | Aus Fahrzeugtank                    |
-| Combi Diesel 6  | ~6 kW           | Diesel             | ❌              | 10 L   | Für große Diesel-Fahrzeuge          |
-| Combi Diesel 4E | ~4 kW (+Hybrid) | Diesel             | ✅              | 10 L   | Hybrid möglich                      |
-| Combi Diesel 6E | ~6 kW (+Hybrid) | Diesel             | ✅              | 10 L   | Maximale Flexibilität               |
+| Modell          | Leistung        | Brennstoff         | Elektro (230 V) |
+| --------------- | --------------- | ------------------ | --------------- |
+| Combi 4         | ~4 kW           | Gas (Propan/Butan) | ❌              |
+| Combi 6         | ~6 kW           | Gas (Propan/Butan) | ❌              |
+| Combi 4E        | ~4 kW (+Hybrid) | Gas                | ✅              |
+| Combi 6E        | ~6 kW (+Hybrid) | Gas                | ✅              |
+| Combi Diesel 4  | ~4 kW           | Diesel             | ❌              |
+| Combi Diesel 6  | ~6 kW           | Diesel             | ❌              |
+| Combi Diesel 4E | ~4 kW (+Hybrid) | Diesel             | ✅              |
+| Combi Diesel 6E | ~6 kW (+Hybrid) | Diesel             | ✅              |
 
 > **Hinweis zur Kompatibilität:** Entwickelt und getestet mit einer Truma Combi 6DE (Baujahr 2018, Eberspächer-Brenner). Ob andere Modelle und insbesondere neuere Diesel-Generationen mit einem von Truma selbst entwickelten Brenner (ohne Eberspächer) ebenfalls kompatibel sind, ist nicht sichergestellt. Rückmeldungen dazu sind sehr willkommen — bitte ein [GitHub Issue](https://github.com/havanti/esphome-truma/issues) öffnen.
 
