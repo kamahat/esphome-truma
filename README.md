@@ -176,6 +176,18 @@ api_encryption_key: ""
 
 Der `api`-Verschlüsselungsschlüssel kann für die lokale Nutzung leer gelassen oder mit einem von ESPHome generierten 32-Byte-Base64-Schlüssel gefüllt werden.
 
+### OTA (Over-the-Air Update)
+
+Alle Beispielkonfigurationen enthalten einen `ota`-Block, der Firmware-Updates direkt über WLAN ermöglicht — ohne den ESP32 physisch anschließen zu müssen:
+
+```yaml
+ota:
+  platform: esphome
+  password: "12345678901234567890123456789012"
+```
+
+**Wichtig:** Das Passwort in den Beispieldateien ist ein Platzhalter. Vor dem Einsatz durch ein eigenes, langes Passwort ersetzen und sicher aufbewahren. Wer das Passwort vergisst, muss den ESP32 wieder per USB flashen.
+
 ### Minimalbeispiel
 
 ```yaml

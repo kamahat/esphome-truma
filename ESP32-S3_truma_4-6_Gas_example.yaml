@@ -43,6 +43,10 @@ api:
   on_client_disconnected:
     - logger.log: "Home Assistant DISCONNECTED"
 
+ota:
+  platform: esphome
+  password: "12345678901234567890123456789012"
+
 wifi:
   networks:
     - ssid: !secret wifi_WOMO_WLAN_ssid
