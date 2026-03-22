@@ -13,13 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 #### All WiFi-based example YAMLs
 - Added `ota` block (`platform: esphome`, password placeholder) to all WiFi-based example configurations
 
-#### `README.md` / `README.en.md` / `examples/Readme.md`
+#### `README.md` / `README.en.md`
 - Added OTA section explaining over-the-air updates and the password placeholder
 
 ### Removed
 
 - `WomoLinControllerEthernet.yaml` — removed (Ethernet-specific, not maintained here)
 - `WomoLinControllerEthernetMqtt.yaml` — removed (Ethernet-specific, not maintained here)
+- `examples/` directory — removed (superseded by root-level example YAMLs)
 
 ---
 
