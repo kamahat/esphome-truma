@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — Bugfixes
+
+### Fixed
+
+#### `components/uart/__init__.py`
+- `validate_raw_data()`: second `isinstance(value, str)` check (dead code, never reachable) corrected to `isinstance(value, bytes)`
+
+#### `README.md` / `README.en.md`
+- Stale filename references `ESP32-S3_truma_6DE_example.yaml` → `ESP32-S3_truma_6DE_Diesel_example.yaml` (file was renamed earlier)
+
+---
+
 ## [Unreleased] — OTA, cleanup
 
 ### Added
