@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [1.0.0] — 2026-03-02 — ESPHome 2025.8+ / 2026.3.x Compatibility
+## Compatibility Status
 
 ### Summary
 
