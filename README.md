@@ -40,7 +40,7 @@ Das integrierte `script_diesel_decoking` automatisiert diesen Vorgang:
 1. Schaltet den Energiemix auf Diesel
 2. Stellt die Raumheizung für 45 Minuten auf 30 °C / HIGH-Modus ein
 3. Schaltet das Heizgerät anschließend ab
-4. Nach dem Abschalten startet die Truma Combi vorsorglich einen Nachglühvorgang des Glühstifts, um eventuelle Rückstände am Glühstiftsieb zu verglühen — dies ist ein normaler Teil des Abschaltvorgangs
+4. Nach dem Abschalten startet die Truma Combi automatisch einen Nachglühvorgang des Glühstifts, um eventuelle Rückstände am Glühstiftsieb zu verglühen — dies geschieht unabhängig von der Entkokungsfunktion und ist ein normaler Bestandteil des internen Truma-Abschaltvorgangs
 5. (Türen und Fenster öffnen ;-) )
 
 In Home Assistant werden zwei Schaltflächen bereitgestellt:

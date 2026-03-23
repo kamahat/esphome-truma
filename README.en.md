@@ -40,7 +40,7 @@ The built-in `script_diesel_decoking` automates this procedure:
 1. Switches the energy mix to Diesel
 2. Sets the room heater to 30 °C / HIGH mode for 45 minutes
 3. Shuts the heater off afterwards
-4. After shutdown, the Truma Combi initiates a precautionary post-glow cycle of the glow plug to burn off any residues on the glow plug screen — this is a normal part of the shutdown sequence
+4. After shutdown, the Truma Combi automatically initiates a post-glow cycle of the glow plug to burn off any residues on the glow plug screen — this is handled internally by the Truma Combi itself and is unrelated to the de-coking script
 5. (open doors and windows ;-) )
 
 Two buttons are exposed in Home Assistant:
