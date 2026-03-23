@@ -1,108 +1,110 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+🇩🇪 Deutsch | [🇬🇧 English](CHANGELOG.en.md)
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
+
+Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — Bugfixes
+## [Unveröffentlicht] — Fehlerbehebungen
 
-### Fixed
+### Behoben
 
 #### `components/uart/__init__.py`
-- `validate_raw_data()`: second `isinstance(value, str)` check (dead code, never reachable) corrected to `isinstance(value, bytes)`
+- `validate_raw_data()`: zweiter `isinstance(value, str)`-Check (toter Code, nie erreichbar) korrigiert zu `isinstance(value, bytes)`
 
 #### `README.md` / `README.en.md`
-- Stale filename references `ESP32-S3_truma_6DE_example.yaml` → `ESP32-S3_truma_6DE_Diesel_example.yaml` (file was renamed earlier)
+- Veralteter Dateiname `ESP32-S3_truma_6DE_example.yaml` → `ESP32-S3_truma_6DE_Diesel_example.yaml` (Datei wurde zuvor umbenannt)
 
 ---
 
-## [Unreleased] — OTA, cleanup
+## [Unveröffentlicht] — OTA, Aufräumen
 
-### Added
+### Hinzugefügt
 
-#### All WiFi-based example YAMLs
-- Added `ota` block (`platform: esphome`, password placeholder) to all WiFi-based example configurations
+#### Alle WiFi-basierten Beispiel-YAMLs
+- `ota`-Block (`platform: esphome`, Passwort-Platzhalter) zu allen WiFi-basierten Beispielkonfigurationen hinzugefügt
 
 #### `README.md` / `README.en.md`
-- Added OTA section explaining over-the-air updates and the password placeholder
+- OTA-Abschnitt ergänzt: Erklärung von Over-the-Air-Updates und Hinweis zum Passwort-Platzhalter
 
-### Removed
+### Entfernt
 
-- `WomoLinControllerEthernet.yaml` — removed (Ethernet-specific, not maintained here)
-- `WomoLinControllerEthernetMqtt.yaml` — removed (Ethernet-specific, not maintained here)
-- `examples/` directory — removed (superseded by root-level example YAMLs)
+- `WomoLinControllerEthernet.yaml` — entfernt (Ethernet-spezifisch, wird hier nicht gepflegt)
+- `WomoLinControllerEthernetMqtt.yaml` — entfernt (Ethernet-spezifisch, wird hier nicht gepflegt)
+- Verzeichnis `examples/` — entfernt (durch Root-Level-Beispiel-YAMLs ersetzt)
 
 ---
 
-## [Unreleased] — Example configurations and documentation
+## [Unveröffentlicht] — Beispielkonfigurationen und Dokumentation
 
-### Added
+### Hinzugefügt
 
-#### `ESP32_truma_4-6_Gas_example.yaml` / `ESP32-S3_truma_4-6_Gas_example.yaml` (new)
-- Gas variant of the example configurations using `HEATER_GAS` and `HEATER_ENERGY_MIX_GAS`
-- Diesel-„Entkokung"/Rückstandsverbrennung script, sensor and buttons omitted (gas-only operation)
+#### `ESP32_truma_4-6_Gas_example.yaml` / `ESP32-S3_truma_4-6_Gas_example.yaml` (neu)
+- Gas-Variante der Beispielkonfigurationen mit `HEATER_GAS` und `HEATER_ENERGY_MIX_GAS`
+- Diesel-„Entkokung"/Rückstandsverbrennung (Script, Sensor, Buttons) nicht enthalten (nur Gasbetrieb)
 
-### Changed
+### Geändert
 
 #### `ESP32_truma_6DE_example.yaml` → `ESP32_truma_6DE_Diesel_example.yaml`
 #### `ESP32-S3_truma_6DE_example.yaml` → `ESP32-S3_truma_6DE_Diesel_example.yaml`
-- Renamed to make the diesel variant explicit
+- Umbenannt, um die Diesel-Variante explizit kenntlich zu machen
 
 #### `components/truma_inetbox/__init__.py` / `components/uart/__init__.py`
-- Added `synchronous=True` to all `register_action()` calls
-  (ESPHome 2026.3.0 requires this parameter; all `play()` methods are synchronous)
+- `synchronous=True` zu allen `register_action()`-Aufrufen hinzugefügt
+  (ESPHome 2026.3.0 erfordert diesen Parameter; alle `play()`-Methoden sind synchron)
 
 #### `README.md` / `README.en.md`
-- Restructured example configuration section into 2-step selection (energy mix → hardware)
-- Added Gas/Diesel variant overview table
-- Added Truma Combi 4 compatibility note
-- Added compatibility disclaimer: tested with Truma Combi 6DE (2018, Eberspächer burner);
-  newer Truma diesel generations without Eberspächer not verified
-- Removed upstream intro paragraph (originated from Fabian-Schmidt repo)
-- Editorial cleanup
+- Beispielkonfigurations-Abschnitt in 2-Schritt-Auswahl umstrukturiert (Energiemix → Hardware)
+- Übersichtstabelle Gas-/Diesel-Variante ergänzt
+- Kompatibilitätshinweis für Truma Combi 4 ergänzt
+- Kompatibilitätsvorbehalt ergänzt: getestet mit Truma Combi 6DE (Baujahr 2018, Eberspächer-Brenner);
+  neuere Truma-Diesel-Generationen ohne Eberspächer nicht verifiziert
+- Einleitungsabsatz aus dem Upstream-Repo (Fabian-Schmidt) entfernt
+- Redaktionelle Überarbeitung
 
 ---
 
-## [Unreleased] — ESPHome 2026.6 Compatibility (deprecation follow-up)
+## [Unveröffentlicht] — ESPHome 2026.6 Kompatibilität (Deprecation-Nachfolge)
 
-### Changed
+### Geändert
 
 #### `components/truma_inetbox/__init__.py`
 - `CORE.using_esp_idf` → `CORE.is_esp32 and not CORE.using_arduino`
-  Deprecated since ESPHome 2026.1 (behavior change in 2026.6). The condition targets
-  ESP-IDF-only builds where the `ARDUINO_SERIAL_EVENT_TASK_*` macros are not provided
-  by the framework.
+  Seit ESPHome 2026.1 als veraltet markiert (Verhaltensänderung in 2026.6). Die Bedingung
+  zielt auf ESP-IDF-only-Builds ab, in denen die `ARDUINO_SERIAL_EVENT_TASK_*`-Makros
+  nicht vom Framework bereitgestellt werden.
 
 #### `components/uart/__init__.py`
 - `CORE.using_esp_idf` → `not CORE.using_arduino`
-  Same deprecation fix in the UART type selector (`_uart_declare_type`).
+  Gleiche Deprecation-Korrektur im UART-Typ-Selektor (`_uart_declare_type`).
 
 #### `components/truma_inetbox/LinBusListener_esp_idf.cpp`
-- Added `#ifndef` fallback defines for `ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE` (4096)
-  and `ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE` (0) so the file compiles even without
-  the build flags as a safety net.
+- `#ifndef`-Fallback-Defines für `ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE` (4096)
+  und `ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE` (0) ergänzt, damit die Datei auch
+  ohne Build-Flags kompiliert (Sicherheitsnetz).
 
 #### `components/truma_inetbox/climate/TrumaWaterClimate.cpp`
 #### `components/truma_inetbox/climate/TrumaRoomClimate.cpp`
 - `traits.set_supports_current_temperature(true)`
   → `traits.add_feature_flags(climate::CLIMATE_SUPPORTS_CURRENT_TEMPERATURE)`
-  `set_supports_current_temperature` is deprecated in ESPHome 2025+.
+  `set_supports_current_temperature` ist ab ESPHome 2025+ veraltet.
 
 ---
 
-## [Unreleased] — ESPHome 2025.8+ / 2026.3.x Compatibility
+## [Unveröffentlicht] — ESPHome 2025.8+ / 2026.3.x Kompatibilität
 
-### Summary
+### Zusammenfassung
 
-This release restores compatibility with ESPHome 2025.8 through 2026.3.x.
-The primary driver was the removal of `get_uart_event_queue()` from the upstream
-`IDFUARTComponent` in ESPHome 2025.8, which broke LIN-bus BREAK detection on
-ESP-IDF builds. Additional breaking changes in ESP-IDF 5.x (ESP32 toolchain) and
-ESPHome 2026.x API changes were also resolved.
+Dieses Release stellt die Kompatibilität mit ESPHome 2025.8 bis 2026.3.x wieder her.
+Hauptursache war die Entfernung von `get_uart_event_queue()` aus der upstream
+`IDFUARTComponent` in ESPHome 2025.8, wodurch die LIN-Bus-BREAK-Erkennung bei
+ESP-IDF-Builds nicht mehr funktionierte. Zusätzliche Breaking Changes in ESP-IDF 5.x
+(ESP32-Toolchain) und ESPHome 2026.x API-Änderungen wurden ebenfalls behoben.
 
-Tested against:
+Getestet mit:
 - ESPHome **2025.9.3** — Arduino + ESP-IDF ✅
 - ESPHome **2026.2.2** — Arduino + ESP-IDF ✅
 - ESPHome **2026.3.0** — Arduino + ESP-IDF ✅
@@ -110,47 +112,47 @@ Tested against:
 
 ---
 
-### Changed — `components/uart/`
+### Geändert — `components/uart/`
 
 #### `uart_component.h`
-- `virtual int available()` → `virtual size_t available()` to match ESPHome 2025.8+ signature
-- Added default (no-op) implementations for new virtual methods introduced in ESPHome 2025.8:
+- `virtual int available()` → `virtual size_t available()` entsprechend der ESPHome 2025.8+ Signatur
+- Standard-(No-op-)Implementierungen für neue virtuelle Methoden aus ESPHome 2025.8 ergänzt:
   `set_rx_full_threshold()`, `set_rx_timeout()`, `load_settings(bool)`, `load_settings()`
 
 #### `uart_component.cpp`
-- Updated `check_read_timeout_()` to use `size_t` comparisons (no unnecessary `int` casts)
+- `check_read_timeout_()` verwendet nun `size_t`-Vergleiche (keine unnötigen `int`-Casts)
 
-#### `uart_component_esp_idf.h` _(critical)_
-- Preprocessor guard changed: `USE_ESP_IDF` → `USE_ESP32_FRAMEWORK_ESP_IDF`
-- Removed `SemaphoreHandle_t lock_` member (mutex removed from upstream in 2025.8)
+#### `uart_component_esp_idf.h` _(kritisch)_
+- Präprozessor-Guard geändert: `USE_ESP_IDF` → `USE_ESP32_FRAMEWORK_ESP_IDF`
+- `SemaphoreHandle_t lock_`-Member entfernt (Mutex in Upstream 2025.8 entfernt)
 - `int available()` → `size_t available()`
-- Added `get_hw_serial_number()` directly to `IDFUARTComponent` base class
-- Added declarations for `load_settings()`, `set_rx_full_threshold()`, `set_rx_timeout()`
-- `uart_event_queue_` kept **unconditionally** (not guarded by `USE_UART_WAKE_LOOP_ON_RX`),
-  because the LIN-bus BREAK detection task requires it at all times
+- `get_hw_serial_number()` direkt in `IDFUARTComponent`-Basisklasse ergänzt
+- Deklarationen für `load_settings()`, `set_rx_full_threshold()`, `set_rx_timeout()` ergänzt
+- `uart_event_queue_` **bedingungslos** behalten (nicht durch `USE_UART_WAKE_LOOP_ON_RX` abgesichert),
+  da der LIN-Bus-BREAK-Erkennungs-Task sie jederzeit benötigt
 
-#### `uart_component_esp_idf.cpp` _(critical)_
-- Preprocessor guard changed: `USE_ESP_IDF` → `USE_ESP32_FRAMEWORK_ESP_IDF`
-- `UART_SCLK_APB` → `UART_SCLK_DEFAULT` (ESP-IDF 5.x API change)
-- `portTICK_RATE_MS` → `pdMS_TO_TICKS(20)` (removed from ESP-IDF 5.x)
-- All `lock_` mutex take/give calls removed (~12 call-sites)
+#### `uart_component_esp_idf.cpp` _(kritisch)_
+- Präprozessor-Guard geändert: `USE_ESP_IDF` → `USE_ESP32_FRAMEWORK_ESP_IDF`
+- `UART_SCLK_APB` → `UART_SCLK_DEFAULT` (ESP-IDF 5.x API-Änderung)
+- `portTICK_RATE_MS` → `pdMS_TO_TICKS(20)` (aus ESP-IDF 5.x entfernt)
+- Alle `lock_`-Mutex-take/give-Aufrufe entfernt (~12 Stellen)
 - `static uint8_t next_uart_num` → `static uart_port_t next_uart_num = UART_NUM_0`
-  (ESP-IDF 5.x: `uart_port_t` is a scoped enum, no implicit `uint8_t` conversion)
-- Postfix `++` on `uart_port_t` replaced with explicit cast:
+  (ESP-IDF 5.x: `uart_port_t` ist ein Scoped Enum, keine implizite `uint8_t`-Konvertierung)
+- Postfix-`++` auf `uart_port_t` durch expliziten Cast ersetzt:
   `next_uart_num = (uart_port_t)(next_uart_num + 1)`
 - `int available()` → `size_t available()`
-- Added implementations for `load_settings()`, `set_rx_full_threshold()`, `set_rx_timeout()`
+- Implementierungen für `load_settings()`, `set_rx_full_threshold()`, `set_rx_timeout()` ergänzt
 
 #### `truma_uart_component_esp_idf.h`
-- Preprocessor guard changed: `USE_ESP_IDF` → `USE_ESP32_FRAMEWORK_ESP_IDF`
-- Removed `get_hw_serial_number()` (now provided by `IDFUARTComponent` base class)
-- Retains `get_uart_event_queue()` exposing `&uart_event_queue_`
+- Präprozessor-Guard geändert: `USE_ESP_IDF` → `USE_ESP32_FRAMEWORK_ESP_IDF`
+- `get_hw_serial_number()` entfernt (wird jetzt von `IDFUARTComponent`-Basisklasse bereitgestellt)
+- `get_uart_event_queue()` bleibt erhalten und gibt `&uart_event_queue_` zurück
 
 #### `uart_component_esp32_arduino.h` / `.cpp`
 - `int available()` → `size_t available()`
-- `check_logger_conflict()`: `logger::global_logger->get_hw_serial()` guarded with
-  `#if defined(USE_LOGGER) && !defined(USE_ESP32)` — ESPHome 2026.1 removed
-  `get_hw_serial()` from `Logger` for ESP32 (Arduino on ESP32 now builds on IDF)
+- `check_logger_conflict()`: `logger::global_logger->get_hw_serial()` mit
+  `#if defined(USE_LOGGER) && !defined(USE_ESP32)` abgesichert — ESPHome 2026.1 hat
+  `get_hw_serial()` aus `Logger` für ESP32 entfernt (Arduino auf ESP32 baut jetzt auf IDF auf)
 
 #### `uart_component_rp2040.h` / `.cpp`
 - `int available()` → `size_t available()`
@@ -160,54 +162,53 @@ Tested against:
 
 ---
 
-### Changed — `components/truma_inetbox/`
+### Geändert — `components/truma_inetbox/`
 
-#### POSIX integer type replacements (all 30 affected files)
+#### POSIX-Integer-Typ-Ersetzungen (alle 30 betroffenen Dateien)
 - `u_int8_t` → `uint8_t`
 - `u_int16_t` → `uint16_t`
 - `u_int32_t` → `uint32_t`
 
-These POSIX-style types (`u_int*_t`) are defined implicitly by glibc / BSD libc headers
-that the Arduino toolchain includes automatically. The ESP-IDF 5.x GCC toolchain does
-**not** make them available, causing 294 compile errors across 30 files.
+Diese POSIX-Typen (`u_int*_t`) werden implizit von glibc-/BSD-libc-Headern bereitgestellt,
+die die Arduino-Toolchain automatisch einbindet. Die ESP-IDF 5.x GCC-Toolchain stellt sie
+**nicht** bereit, was zu 294 Kompilierfehlern in 30 Dateien führte.
 
-Affected files include:
+Betroffene Dateien:
 `LinBusProtocol.h`, `LinBusProtocol.cpp`, `LinBusListener.h`, `LinBusListener.cpp`,
 `TrumaiNetBoxApp.h`, `TrumaiNetBoxApp.cpp`, `TrumaiNetBoxAppHeater.h/cpp`,
 `TrumaiNetBoxAppAirconManual.h/cpp`, `TrumaiNetBoxAppAirconAuto.h/cpp`,
 `TrumaiNetBoxAppClock.h/cpp`, `TrumaiNetBoxAppTimer.h/cpp`,
 `TrumaStructs.h`, `TrumaEnums.h`, `TrumaStatusFrameBuilder.h`,
 `TrumaStausFrameResponseStorage.h`, `helpers.h`, `helpers.cpp`,
-`automation.h`, `time/TrumaTime.h`, and sensor/number/select/climate sub-components.
+`automation.h`, `time/TrumaTime.h` sowie sensor/number/select/climate-Unterkomponenten.
 
 #### `LinBusListener_esp_idf.cpp`
 - `#define QUEUE_WAIT_BLOCKING (portTickType) portMAX_DELAY`
   → `(TickType_t) portMAX_DELAY`
-  (`portTickType` was renamed to `TickType_t` in FreeRTOS 10 / ESP-IDF 5.x)
+  (`portTickType` wurde in FreeRTOS 10 / ESP-IDF 5.x in `TickType_t` umbenannt)
 - `uart_intr_config(uart_num, &uart_intr)` → `uart_intr_config((uart_port_t) uart_num, &uart_intr)`
-  (ESP-IDF 5.x: `uart_intr_config` requires `uart_port_t`, no implicit `uint8_t` conversion)
+  (ESP-IDF 5.x: `uart_intr_config` erfordert `uart_port_t`, keine implizite `uint8_t`-Konvertierung)
 
 #### `LinBusListener_esp32_arduino.cpp`
 - `#define QUEUE_WAIT_BLOCKING (portTickType) portMAX_DELAY`
   → `(TickType_t) portMAX_DELAY`
-  (same FreeRTOS rename, also affects Arduino on ESP32 which builds on ESP-IDF 5.x)
+  (gleiche FreeRTOS-Umbenennung, betrifft auch Arduino auf ESP32, das auf ESP-IDF 5.x aufbaut)
 
 ---
 
-### Added
+### Hinzugefügt
 
-- `test_compile.yaml` — minimal test configuration for ESP32 Arduino framework builds
-- `test_compile_idf.yaml` — minimal test configuration for ESP32 ESP-IDF framework builds
+- `test_compile.yaml` — minimale Testkonfiguration für ESP32-Arduino-Framework-Builds
+- `test_compile_idf.yaml` — minimale Testkonfiguration für ESP32-ESP-IDF-Framework-Builds
 
 ---
 
-### Notes
+### Hinweise
 
-- ESPHome **2026.1.x does not exist** on PyPI — version numbering jumps from 2025.10.x
-  directly to 2026.2.x.
-- ESPHome 2026.1 deprecated `CORE.using_esp_idf` (warning only; behavior changes in 2026.6).
-  ESP32 Arduino now officially builds on top of ESP-IDF, so IDF features are available
-  in both frameworks. The `uart_component_esp32_arduino` component continues to work
-  as a custom override for this project.
-- Installing ESPHome 2026.2.x in a Python venv additionally requires the
-  `fatfs-ng` package (`pip install fatfs-ng`) as a transitive PlatformIO dependency.
+- ESPHome **2026.1.x existiert nicht** auf PyPI — die Versionsnummerierung springt von 2025.10.x
+  direkt zu 2026.2.x.
+- ESPHome 2026.1 hat `CORE.using_esp_idf` als veraltet markiert (nur Warnung; Verhaltensänderung in 2026.6).
+  ESP32 Arduino baut nun offiziell auf ESP-IDF auf, sodass IDF-Features in beiden Frameworks verfügbar sind.
+  Die `uart_component_esp32_arduino`-Komponente funktioniert weiterhin als benutzerdefinierter Override.
+- Die Installation von ESPHome 2026.2.x in einem Python-venv erfordert zusätzlich das
+  `fatfs-ng`-Paket (`pip install fatfs-ng`) als transitive PlatformIO-Abhängigkeit.
