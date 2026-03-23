@@ -8,7 +8,7 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unveröffentlicht] — ESPHome 2025.8+ / 2026.3.x Kompatibilität
+## [1.0.0] — 2026-03-02 — ESPHome 2025.8+ / 2026.3.x Kompatibilität
 
 ### Zusammenfassung
 
@@ -26,7 +26,7 @@ Getestet mit:
 
 ---
 
-## [Unveröffentlicht] — Fehlerbehebungen
+## [1.4.0] — 2026-03-23 — Fehlerbehebungen
 
 ### Behoben
 
@@ -38,7 +38,7 @@ Getestet mit:
 
 ---
 
-## [Unveröffentlicht] — OTA, Aufräumen
+## [1.3.0] — 2026-03-22 — OTA, Aufräumen
 
 ### Hinzugefügt
 
@@ -56,7 +56,7 @@ Getestet mit:
 
 ---
 
-## [Unveröffentlicht] — Beispielkonfigurationen und Dokumentation
+## [1.2.0] — 2026-03-19 — Beispielkonfigurationen und Dokumentation
 
 ### Hinzugefügt
 
@@ -85,7 +85,7 @@ Getestet mit:
 
 ---
 
-## [Unveröffentlicht] — ESPHome 2026.6 Kompatibilität (Deprecation-Nachfolge)
+## [1.1.0] — 2026-03-14 — ESPHome 2026.6 Kompatibilität (Deprecation-Nachfolge)
 
 ### Geändert
 
@@ -112,7 +112,7 @@ Getestet mit:
 
 ---
 
-## [Unveröffentlicht] — ESPHome 2025.8+ / 2026.3.x Kompatibilität — Details
+## [1.0.0] — 2026-03-02 — ESPHome 2025.8+ / 2026.3.x Kompatibilität — Details
 
 ### Geändert — `components/uart/`
 
