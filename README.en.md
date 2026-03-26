@@ -1,6 +1,6 @@
 # ESPHome & Truma CP Plus — smart heating and more 🚐
 
-[🇩🇪 Deutsch](README.md) | 🇬🇧 English
+[🇩🇪 Deutsch](README.md) | 🇬🇧 English | [🇫🇷 Français](README.fr.md)
 
 ## Acknowledgements
 
@@ -355,7 +355,7 @@ The following `type` values are available:
 The following [ESP Home actions](https://esphome.io/guides/automations.html#actions) are available:
 
 - `truma_inetbox.heater.set_target_room_temperature`
-  - `temperature` - Temperature between 5C and 30C. Below 5C will disable the Heater.
+  - `temperature` - Temperature between 5 °C and 30 °C. Below 5 °C will disable the Heater.
   - `heating_mode` - Optional set heating mode: `"OFF"`, `ECO`, `HIGH`, `BOOST`.
 - `truma_inetbox.heater.set_target_water_temperature`
   - `temperature` - Set water temp as number: `0`, `40`, `60`, `80`.
@@ -367,12 +367,12 @@ The following [ESP Home actions](https://esphome.io/guides/automations.html#acti
   - `energy_mix` - Set energy mix to: `GAS`, `MIX`, `ELECTRICITY`.
   - `watt` - Optional: Set electricity level to `0`, `900`, `1800`
 - `truma_inetbox.aircon.manual.set_target_temperature`
-  - `temperature` - Temperature between 16C and 31C. Below 16C will disable the Aircon.
+  - `temperature` - Temperature between 16 °C and 31 °C. Below 16 °C will disable the Aircon.
 - `truma_inetbox.timer.disable` - Disable the timer configuration.
 - `truma_inetbox.timer.activate` - Set a new timer configuration.
   - `start` - Start time.
   - `stop` - Stop time.
-  - `room_temperature` - Temperature between 5C and 30C.
+  - `room_temperature` - Temperature between 5 °C and 30 °C.
   - `heating_mode` - Optional: Set heating mode: `"OFF"`, `ECO`, `HIGH`, `BOOST`.
   - `water_temperature` - Optional: Set water temp as number: `0`, `40`, `60`, `80`.
   - `energy_mix` - Optional: Set energy mix to: `GAS`, `MIX`, `ELECTRICITY`.

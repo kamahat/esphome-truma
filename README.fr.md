@@ -1,6 +1,6 @@
 # ESPHome & Truma CP Plus — chauffage intelligent et plus encore 🚐
 
-🇩🇪 Deutsch | [🇬🇧 English](README.en.md)
+[🇩🇪 Deutsch](README.md) | [🇬🇧 English](README.en.md) | 🇫🇷 Français
 
 ## Remerciements
 
@@ -33,14 +33,14 @@ Pour adapter cela à vos propres capteurs, les quatre adresses MAC dans le `on_b
 Si un Truma Combi fonctionne au diesel pendant une longue période, des dépôts de suie peuvent s'accumuler sur ou dans la zone du brûleur (matériau fritté en acier inoxydable) et sur la fenetre. Les precautions recommandés :
 
 - Effectuer un cycle de ramoage mensuel (automatisé par cette configuration, voir ci-dessous).
-- Utilisez du carburant diesel de la plus haute qualité possible ou ajoutez un additif de carburant augmentant l'indice de cétane au réservoir — un indice de cétane plus élevé conduit à une combustion plus propre et réduit les dépôts.Utilisez du carburant diesel de la plus haute qualité possible ou ajoutez un additif de carburant augmentant l'indice de cétane au réservoir — un indice de cétane plus élevé conduit à une combustion plus propre et réduit les dépôts.
+- Utilisez du carburant diesel de la plus haute qualité possible ou ajoutez un additif de carburant augmentant l'indice de cétane au réservoir — un indice de cétane plus élevé conduit à une combustion plus propre et réduit les dépôts.
 
 Le script intégré `script_diesel_decoking` automatise de processus :
 
 1. Passe le mix énergétique au diesel
 2. Régle le radiateur d'appoint sur le mode 30 °C / HIGH pendant 45 minutes
 3. Éteint le chauffage après
-4. Après l'arrêt, le Truma Combi démarre automatiquement un processus de post-recuit de la goupille de préchauffage pour brûler tous les résidus sur l'écran de la goupille de préchauffage — cela se produit indépendamment de la fonction de décokage et fait partie intégrante du processus d'arrêt interne du Truma
+4. Après l'arrêt, le Truma Combi démarre automatiquement un processus de post-incandescence de la bougie de préchauffage pour brûler tous les résidus sur son filtre — ceci se produit indépendamment de la fonction de décokage et fait partie intégrante du processus d'arrêt interne du Truma
 5. (Ouvrez portes et fenêtres ;-) )
 
 Deux boutons sont fournis dans Home Assistant :
@@ -97,7 +97,7 @@ Interface utilisateur Web intégrée — Un serveur Web local fonctionne sur le 
 
 Modèles d'interrupteurs — Des interrupteurs marche/arrêt prêts à l'emploi pour le radiateur, la chaudière à eau et la minuterie intégrée sont inclus, simplifiant l'automatisation et l'intégration du tableau de bord.
 
-Boutton reboot — Un bouton de redémarrage ESP en un clic est disponible dans Home Assistant pour la maintenance à distance.
+Bouton reboot — Un bouton de redémarrage ESP en un clic est disponible dans Home Assistant pour la maintenance à distance.
 
 ---
 
@@ -147,7 +147,7 @@ La variante détermine quelles entités ESPHome sont activées :
 |---|---|---|
 | Micro CPU | ESP32 (classique, Rev ≥ 3) | ESP32-S3 |
 | Carte | `esp32dev` | `esp32-s3-devkitc-1` |
-| PSRAM | 	non utilisé | OctalSPI-PSRAM aktiviert (N16R8, 8 MB) |
+| PSRAM | 	non utilisé | OctalSPI-PSRAM activé (N16R8, 8 MB) |
 | BLE-Stack | dans la RAM interne | externalisé vers PSRAM |
 | Pin LIN UART TX | GPIO17 | GPIO18 (évite les conflits de broches PSRAM) |
 | Pin LIN UART RX | GPIO16 | GPIO8 (évite les conflits de broches PSRAM) |
@@ -156,7 +156,7 @@ La variante détermine quelles entités ESPHome sont activées :
 | Diesel-„Ramonage" ou combustion résidus | Absent | inclus (variante diesel uniquement) |
 | Niveau de journalisation | `DEBUG` | `DEBUG` |
 
-Utilisez la variante ESP32 s'il existe un ESP32 standard (WROOM-32, DevKit, etc.) sans PSRAM. Commenter `CONFIG_ESP32_REV_MIN: "3"` et `version: recommended` peut réduire la taille binaire sur les anciens toolchain.
+Utilisez la variante ESP32 s'il existe un ESP32 standard (WROOM-32, DevKit, etc.) sans PSRAM. Décommenter `CONFIG_ESP32_REV_MIN: "3"` et `version: recommended` peut réduire la taille binaire sur les anciens toolchain.
 Utilisez la variante ESP32-S3 si un module ESP32-S3 avec OctalSPI PSRAM (par exemple N16R8) est présent. 
 La configuration PSRAM (mode OCT, 80 MHz) est requise pour cette variante de module. 
 Les broches UART ont été éloignées des GPIO16/17, qui sont réservées à la PSRAM sur les cartes S3.
@@ -167,9 +167,9 @@ Utiliser toutes les configurations `secrets.yaml` pour les données d'accès Wi-
 
 ```yaml
 wifi_WOMO_WLAN_ssid: "MobileSSID"
-wifi_WOMO_password: "MobilePasswort"
-wifi_Home_ssid: "HeimSSID"
-wifi_Home_password: "HeimPasswort"
+wifi_WOMO_password: "MotDePasseMobile"
+wifi_Home_ssid: "SSIDMaison"
+wifi_Home_password: "MotDePasseMaison"
 api_encryption_key: ""
 ```
 
@@ -348,32 +348,32 @@ Ce qui suit `type` les valeurs sont disponibles :
 
 ### Actions
 
-Ce qui suit [ESPHome-Aktionen](https://esphome.io/guides/automations.html#actions) sont disponibles :
+Les [actions ESPHome](https://esphome.io/guides/automations.html#actions) suivantes sont disponibles :
 
 - `truma_inetbox.heater.set_target_room_temperature`
-  - `temperature` - Temperatur zwischen 5 °C und 30 °C. Unter 5 °C wird das Heizgerät deaktiviert.
-  - `heating_mode` - Optional: Heizmodus setzen: `"OFF"`, `ECO`, `HIGH`, `BOOST`.
+  - `temperature` - Température entre 5 °C et 30 °C. En dessous de 5 °C, le chauffage est désactivé.
+  - `heating_mode` - Optionnel : définir le mode de chauffage : `"OFF"`, `ECO`, `HIGH`, `BOOST`.
 - `truma_inetbox.heater.set_target_water_temperature`
-  - `temperature` - Wassertemperatur als Zahl: `0`, `40`, `60`, `80`.
+  - `temperature` - Température de l'eau sous forme de nombre : `0`, `40`, `60`, `80`.
 - `truma_inetbox.heater.set_target_water_temperature_enum`
-  - `temperature` - Wassertemperatur als Text: `"OFF"`, `ECO`, `HIGH`, `BOOST`.
+  - `temperature` - Température de l'eau sous forme de texte : `"OFF"`, `ECO`, `HIGH`, `BOOST`.
 - `truma_inetbox.heater.set_electric_power_level`
-  - `watt` - Stromstufe setzen: `0`, `900`, `1800`.
+  - `watt` - Définir le niveau électrique : `0`, `900`, `1800`.
 - `truma_inetbox.heater.set_energy_mix`
-  - `energy_mix` - Energiemix setzen: `GAS`, `MIX`, `ELECTRICITY`.
-  - `watt` - Optional: Stromstufe setzen: `0`, `900`, `1800`.
+  - `energy_mix` - Définir le mix énergétique : `GAS`, `MIX`, `ELECTRICITY`.
+  - `watt` - Optionnel : définir le niveau électrique : `0`, `900`, `1800`.
 - `truma_inetbox.aircon.manual.set_target_temperature`
-  - `temperature` - Temperatur zwischen 16 °C und 31 °C. Unter 16 °C wird die Klimaanlage deaktiviert.
-- `truma_inetbox.timer.disable` - Timer-Konfiguration deaktivieren.
-- `truma_inetbox.timer.activate` - Neue Timer-Konfiguration setzen.
-  - `start` - Startzeit.
-  - `stop` - Stoppzeit.
-  - `room_temperature` - Temperatur zwischen 5 °C und 30 °C.
-  - `heating_mode` - Optional: Heizmodus: `"OFF"`, `ECO`, `HIGH`, `BOOST`.
-  - `water_temperature` - Optional: Wassertemperatur als Zahl: `0`, `40`, `60`, `80`.
-  - `energy_mix` - Optional: Energiemix: `GAS`, `MIX`, `ELECTRICITY`.
-  - `watt` - Optional: Stromstufe: `0`, `900`, `1800`.
-- `truma_inetbox.clock.set` - CP Plus vom ESP aus aktualisieren. Es muss eine weitere [Zeitquelle](https://esphome.io/#time-components) konfiguriert sein, z.B. Home Assistant Time, GPS oder DS1307 RTC.
+  - `temperature` - Température entre 16 °C et 31 °C. En dessous de 16 °C, la climatisation est désactivée.
+- `truma_inetbox.timer.disable` - Désactiver la configuration du minuteur.
+- `truma_inetbox.timer.activate` - Définir une nouvelle configuration du minuteur.
+  - `start` - Heure de début.
+  - `stop` - Heure de fin.
+  - `room_temperature` - Température entre 5 °C et 30 °C.
+  - `heating_mode` - Optionnel : mode de chauffage : `"OFF"`, `ECO`, `HIGH`, `BOOST`.
+  - `water_temperature` - Optionnel : température de l'eau sous forme de nombre : `0`, `40`, `60`, `80`.
+  - `energy_mix` - Optionnel : mix énergétique : `GAS`, `MIX`, `ELECTRICITY`.
+  - `watt` - Optionnel : niveau électrique : `0`, `900`, `1800`.
+- `truma_inetbox.clock.set` - Mettre à jour le CP Plus depuis l'ESP. Une autre [source de temps](https://esphome.io/#time-components) doit être configurée, par exemple Home Assistant Time, GPS ou DS1307 RTC.
 
 ## Commentaires et tests
 
