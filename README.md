@@ -1,6 +1,6 @@
 # ESPHome & Truma CP Plus — smart heating and more 🚐
 
-🇩🇪 Deutsch | [🇬🇧 English](README.en.md)
+🇩🇪 Deutsch | [🇬🇧 English](README.en.md) | [🇫🇷 Français](README.fr.md)
 
 ## Danksagungen
 
