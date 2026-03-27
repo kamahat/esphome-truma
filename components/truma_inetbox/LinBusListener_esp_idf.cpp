@@ -78,8 +78,14 @@ void LinBusListener::uartEventTask_(void *args) {
   // Wait for UART event queue to be initialized.
   // On dual-core ESP32 the task may start on core 0 before core 1 has finished
   // calling uart_driver_install(), leaving the queue handle momentarily NULL.
+  uint32_t waited_ms = 0;
   while (*uartEventQueue == nullptr) {
     vTaskDelay(pdMS_TO_TICKS(1));
+    if (++waited_ms > 5000) {
+      ESP_LOGE(TAG, "UART%d event queue not available after 5s -- UART setup failed?", uart_num);
+      vTaskDelete(NULL);
+      return;
+    }
   }
   uart_event_t event;
   for (;;) {

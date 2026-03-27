@@ -27,6 +27,20 @@ Testé avec :
 
 ---
 
+## [1.0.6] — 2026-03-27 — Robustesse
+
+### Corrigé
+
+#### `components/truma_inetbox/LinBusListener_esp_idf.cpp`
+- `uartEventTask_` : crash au démarrage corrigé sur ESP32 double cœur, où le task pouvait
+  appeler `xQueueReceive()` avec un handle de queue NULL avant que `uart_driver_install()`
+  sur le cœur 1 n'ait terminé
+- Timeout de 5 secondes ajouté à la boucle d'attente de la queue : si le pilote UART ne
+  devient jamais disponible (ex. échec du setup UART), le task journalise désormais une
+  erreur explicite et se termine proprement au lieu de boucler silencieusement
+
+---
+
 ## [1.0.5] — 2026-03-27 — Améliorations
 
 ### Modifié

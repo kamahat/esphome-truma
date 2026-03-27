@@ -26,6 +26,20 @@ Getestet mit:
 
 ---
 
+## [1.0.6] — 2026-03-27 — Robustheit
+
+### Behoben
+
+#### `components/truma_inetbox/LinBusListener_esp_idf.cpp`
+- `uartEventTask_`: Absturz beim Start auf Dual-Core-ESP32 behoben, bei dem der Task
+  `xQueueReceive()` mit einem NULL-Queue-Handle aufrufen konnte, bevor `uart_driver_install()`
+  auf Core 1 abgeschlossen war
+- Timeout von 5 Sekunden zur Queue-Warteloop hinzugefügt: falls der UART-Treiber nie
+  verfügbar wird (z. B. bei fehlgeschlagenem UART-Setup), loggt der Task jetzt eine
+  klare Fehlermeldung und beendet sich sauber, anstatt still weiterzulaufen
+
+---
+
 ## [1.0.5] — 2026-03-27 — Verbesserungen
 
 ### Geändert
