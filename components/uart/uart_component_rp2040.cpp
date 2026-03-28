@@ -103,8 +103,14 @@ void RP2040UartComponent::setup() {
 
   if (tx_hw == -1 || rx_hw == -1 || tx_hw != rx_hw) {
     ESP_LOGV(TAG, "Using SerialPIO");
-    pin_size_t tx = this->tx_pin_ == nullptr ? SerialPIO::NOPIN : this->tx_pin_->get_pin();
-    pin_size_t rx = this->rx_pin_ == nullptr ? SerialPIO::NOPIN : this->rx_pin_->get_pin();
+    // arduino-pico >= 5.x defines NOPIN as a global macro in Arduino.h:
+    //   #define NOPIN ((pin_size_t) 0xff)
+    // SerialPIO::NOPIN no longer exists as a class member — the preprocessor
+    // expands SerialPIO::NOPIN to SerialPIO::((pin_size_t)0xff) before the
+    // compiler sees '::' causing a syntax error.  Use the value directly.
+    constexpr pin_size_t kNOPIN = (pin_size_t) 0xff;  // identical to NOPIN macro
+    pin_size_t tx = this->tx_pin_ == nullptr ? kNOPIN : this->tx_pin_->get_pin();
+    pin_size_t rx = this->rx_pin_ == nullptr ? kNOPIN : this->rx_pin_->get_pin();
     auto *serial = new SerialPIO(tx, rx, this->rx_buffer_size_);  // NOLINT(cppcoreguidelines-owning-memory)
     serial->begin(this->baud_rate_, config);
     if (this->tx_pin_ != nullptr && this->tx_pin_->is_inverted())
