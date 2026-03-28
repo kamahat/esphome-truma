@@ -1,4 +1,24 @@
 #ifdef USE_RP2040
+// =============================================================================
+// LinBusListener_rp2040.cpp — RP2040 backend for the LIN bus listener
+// =============================================================================
+//
+// Architecture (mirrors ESP32 dual-task design):
+//
+//   lin_uart_task_  — high-priority FreeRTOS task on Core TRUMA_LIN_TASK_CORE (default 1)
+//       Polls hardware UART, detects BREAK, calls answer_lin_order_() in real time,
+//       enqueues complete frames in lin_msg_queue_.
+//
+//   lin_event_task_ — low-priority FreeRTOS task on Core TRUMA_LIN_TASK_CORE
+//       Blocks on lin_msg_queue_ and dispatches frames to lin_message_recieved_().
+//
+// WHY NOT loop1():
+//   loop1() is a global weak symbol consumed by the arduino-pico runtime.
+//   Any other component that also defines loop1() (sensors using Core 1 for
+//   SPI/DMA, BMI160, etc.) causes a linker collision or silent override —
+//   only one definition wins.  Dedicated FreeRTOS tasks coexist safely.
+// =============================================================================
+
 #include "LinBusListener.h"
 #include "esphome/core/log.h"
 #ifdef CUSTOM_ESPHOME_UART
@@ -6,118 +26,216 @@
 #define ESPHOME_UART uart::truma_RP2040UartComponent
 #else
 #define ESPHOME_UART uart::RP2040UartComponent
-#endif // CUSTOM_ESPHOME_UART
+#endif  // CUSTOM_ESPHOME_UART
 #include "esphome/components/uart/uart_component_rp2040.h"
 #include <SerialUART.h>
 
-// Instance 1 for UART port 0
-static esphome::truma_inetbox::LinBusListener *LIN_BUS_LISTENER_INSTANCE_1 = nullptr;
-// Instance 2 for UART port 1
-static esphome::truma_inetbox::LinBusListener *LIN_BUS_LISTENER_INSTANCE_2 = nullptr;
+// arduino-pico >= 5.x requires __FREERTOS defined before any FreeRTOS header.
+#ifndef __FREERTOS
+#define __FREERTOS 1
+#endif
+#include <task.h>
 
 namespace esphome {
 namespace truma_inetbox {
 
 static const char *const TAG = "truma_inetbox.LinBusListener";
 
-#define QUEUE_WAIT_DONT_BLOCK (TickType_t) 0
+#define QUEUE_WAIT_DONT_BLOCK ((TickType_t) 0)
+#define QUEUE_WAIT_BLOCKING   ((TickType_t) portMAX_DELAY)
 
-void LinBusListener::setup_framework() {
-  auto uartComp = static_cast<ESPHOME_UART *>(this->parent_);
-  auto is_hw_serial = uartComp->is_hw_serial();
-  if (!is_hw_serial) {
-    ESP_LOGW(TAG, "Must use hardware serial SerialPIO is not supported.");
-    this->mark_failed();
-  }
-  // auto hw_serial = static_cast<SerialUART *>(uartComp->get_hw_serial());
-  auto hw_serial = uartComp->get_hw_serial();
+// Module-level pointer for the FreeRTOS stack-overflow hook.
+static LinBusListener *g_lin_listener_for_stack_hook = nullptr;
 
-  if ((*hw_serial) == Serial1) {
-    LIN_BUS_LISTENER_INSTANCE_1 = this;
-    this->uart_number_ = 1;
-    this->uart_ = uart0;
-
-  } else if ((*hw_serial) == Serial2) {
-    LIN_BUS_LISTENER_INSTANCE_2 = this;
-    this->uart_number_ = 2;
-    this->uart_ = uart1;
-  }
-
-  if (this->uart_ != nullptr) {
-    // Turn off FIFO's - we want to do this character by character
-    uart_set_fifo_enabled(this->uart_, false);
-  }
+// ---------------------------------------------------------------------------
+// Helper: pin a task to a specific core when FreeRTOS SMP is available.
+// ---------------------------------------------------------------------------
+static void pin_task_to_core_(TaskHandle_t handle, UBaseType_t core) {
+#if defined(configUSE_CORE_AFFINITY) && (configUSE_CORE_AFFINITY == 1) && (configNUM_CORES > 1)
+  vTaskCoreAffinitySet(handle, static_cast<UBaseType_t>(1u << core));
+#else
+  (void) handle;
+  (void) core;
+#endif
 }
 
+// ---------------------------------------------------------------------------
+// Task bodies
+// ---------------------------------------------------------------------------
+
+void LinBusListener::lin_uart_task_(void *args) {
+  if (args == nullptr) { vTaskDelete(nullptr); return; }
+  LinBusListener *self = static_cast<LinBusListener *>(args);
+
+  for (;;) {
+    if (self->is_failed()) {
+      ESP_LOGW(TAG, "lin_uart_task_: component failed — task exiting.");
+      self->lin_uart_task_handle_ = nullptr;
+      vTaskDelete(nullptr);
+      return;
+    }
+    uint32_t delay_ms = self->onSerialEvent();
+    if (delay_ms == 0) delay_ms = 1;
+    if (delay_ms > 1000) delay_ms = 1000;
+    vTaskDelay(pdMS_TO_TICKS(delay_ms));
+  }
+  vTaskDelete(nullptr);
+}
+
+void LinBusListener::lin_event_task_(void *args) {
+  if (args == nullptr) { vTaskDelete(nullptr); return; }
+  LinBusListener *self = static_cast<LinBusListener *>(args);
+
+  for (;;) {
+    if (self->is_failed()) {
+      ESP_LOGW(TAG, "lin_event_task_: component failed — task exiting.");
+      self->lin_event_task_handle_ = nullptr;
+      vTaskDelete(nullptr);
+      return;
+    }
+    self->process_lin_msg_queue(QUEUE_WAIT_BLOCKING);
+  }
+  vTaskDelete(nullptr);
+}
+
+// ---------------------------------------------------------------------------
+// setup_framework — called once from LinBusListener::setup() on Core 0
+// ---------------------------------------------------------------------------
+void LinBusListener::setup_framework() {
+  TRUMA_GUARD_NOT_NULL(this->parent_, "parent UART in setup_framework",
+                       this->mark_failed(); return);
+
+  auto *uart_comp = static_cast<ESPHOME_UART *>(this->parent_);
+
+  // Guard: only hardware UART supported; SerialPIO cannot detect BREAK.
+  if (!uart_comp->is_hw_serial()) {
+    guards_detail::record_error(this->error_count_, this->last_error_,
+                                TrumaErrorCode::ERR_RP2040_NO_HW_SERIAL);
+    ESP_LOGW(TAG, "Guard[HW_SERIAL]: LIN requires hardware UART — SerialPIO not supported.");
+    this->mark_failed();
+    return;
+  }
+
+  HardwareSerial *hw_serial = uart_comp->get_hw_serial();
+
+  // Guard: must be Serial1 (uart0) or Serial2 (uart1).
+  if (*hw_serial == Serial1) {
+    this->uart_number_ = 1;
+    this->uart_ = uart0;
+  } else if (*hw_serial == Serial2) {
+    this->uart_number_ = 2;
+    this->uart_ = uart1;
+  } else {
+    guards_detail::record_error(this->error_count_, this->last_error_,
+                                TrumaErrorCode::ERR_RP2040_UNKNOWN_SERIAL);
+    ESP_LOGE(TAG, "Guard[UNKNOWN_SERIAL]: unknown SerialUART instance.");
+    this->mark_failed();
+    return;
+  }
+
+  // Disable FIFO: every byte triggers an event immediately.
+  uart_set_fifo_enabled(this->uart_, false);
+
+  g_lin_listener_for_stack_hook = this;
+
+  // ---- UART polling task (high priority) ---------------------------------
+  BaseType_t ret = xTaskCreate(
+      LinBusListener::lin_uart_task_, "lin_uart",
+      TRUMA_LIN_UART_TASK_STACK_SIZE, this,
+      24,   // same priority as ESP32 uartEventTask_
+      &this->lin_uart_task_handle_);
+
+  if (ret != pdPASS || this->lin_uart_task_handle_ == nullptr) {
+    guards_detail::record_error(this->error_count_, this->last_error_,
+                                TrumaErrorCode::ERR_RP2040_TASK_CREATE);
+    ESP_LOGE(TAG, "Guard[TASK_CREATE]: failed to create lin_uart task.");
+    g_lin_listener_for_stack_hook = nullptr;
+    this->mark_failed();
+    return;
+  }
+  pin_task_to_core_(this->lin_uart_task_handle_, TRUMA_LIN_TASK_CORE);
+
+  // ---- Event dispatch task (low priority) --------------------------------
+  ret = xTaskCreate(
+      LinBusListener::lin_event_task_, "lin_event",
+      TRUMA_LIN_EVENT_TASK_STACK_SIZE, this,
+      2,    // same priority as ESP32 eventTask_
+      &this->lin_event_task_handle_);
+
+  if (ret != pdPASS || this->lin_event_task_handle_ == nullptr) {
+    guards_detail::record_error(this->error_count_, this->last_error_,
+                                TrumaErrorCode::ERR_RP2040_TASK_CREATE);
+    ESP_LOGE(TAG, "Guard[TASK_CREATE]: failed to create lin_event task — cleaning up.");
+    vTaskDelete(this->lin_uart_task_handle_);
+    this->lin_uart_task_handle_ = nullptr;
+    g_lin_listener_for_stack_hook = nullptr;
+    this->mark_failed();
+    return;
+  }
+  pin_task_to_core_(this->lin_event_task_handle_, TRUMA_LIN_TASK_CORE);
+
+  ESP_LOGD(TAG, "UART%d: lin_uart (prio 24) + lin_event (prio 2) tasks on Core %d.",
+           this->uart_number_, TRUMA_LIN_TASK_CORE);
+}
+
+// ---------------------------------------------------------------------------
+// onSerialEvent — called by lin_uart_task_
+// Returns recommended poll delay in milliseconds.
+// ---------------------------------------------------------------------------
 uint32_t LinBusListener::onSerialEvent() {
+  if (this->is_failed()) return 1000;
+
   this->onReceive_();
 
   if (this->uart_ != nullptr) {
-    // Receive Status Register/Error Clear Register, UARTRSR/UARTECR
-    // 0x00000004 [2]     : BE (0): Break error
-    auto receive_status_register = uart_get_hw(this->uart_)->rsr;
+    uint32_t rsr = uart_get_hw(this->uart_)->rsr;
+    if ((rsr & UART_UARTRSR_BE_BITS) == UART_UARTRSR_BE_BITS) {
+      ESP_LOGVV(TAG, "UART%d RX BREAK detected.", this->uart_number_);
 
-    if ((receive_status_register & UART_UARTRSR_BE_BITS) == UART_UARTRSR_BE_BITS) {
-      ESP_LOGVV(TAG, "UART%d RX break.", this->uart_number_);
-      // If the break is valid the `onReceive` is called first and the break is handeld. Therfore the expectation is
-      // that the state should be in waiting for `SYNC`.
-      if (this->current_state_ != READ_STATE_BREAK || this->current_state_ != READ_STATE_SYNC) {
+      // BUG FIX: original used || (tautology — always true).
+      // Correct: only force SYNC when NOT already in BREAK or SYNC.
+      if (this->current_state_ != READ_STATE_BREAK &&
+          this->current_state_ != READ_STATE_SYNC) {
         this->current_state_ = READ_STATE_SYNC;
       }
 
-      // Clear Receive Status Register
       hw_clear_bits(&uart_get_hw(this->uart_)->rsr, UART_UARTRSR_BE_BITS);
     }
   }
 
   if (this->current_state_ == READ_STATE_BREAK) {
-    // Next is a break. CP Plus has an inter data break of ~35ms
-    auto current = micros();
-    if ((this->last_data_recieved_ + (1000 * 1000 /* 1 second */)) < current) {
-      // I have not recieved data for a while. Sleep deeper
-      return 750;
-    } else if ((this->last_data_recieved_ + (50 * 1000 /* 0.1 second */)) < current) {
-      // I have not recieved data for a while. Sleep deep
-      return 50;
-    } else {
-      // Expecting a SYNC.
-      return 10;
-    }
-  } else {
-    // Expecting a byte.
-    return 1;
+    uint32_t now = micros();
+    if ((this->last_data_recieved_ + 1000u * 1000u) < now) return 750;
+    if ((this->last_data_recieved_ + 50u * 1000u) < now)   return 50;
+    return 10;
   }
+  return 1;
 }
 
 }  // namespace truma_inetbox
 }  // namespace esphome
 
-extern void loop1() {
-  if (LIN_BUS_LISTENER_INSTANCE_1 == nullptr && LIN_BUS_LISTENER_INSTANCE_2 == nullptr) {
-    // Wait for setup_framework to finish.
-    delay(100);
-  } else {
-    uint32_t sleep1 = 0xFFFFFFFF;
-    uint32_t sleep2 = 0xFFFFFFFF;
-    if (LIN_BUS_LISTENER_INSTANCE_1 != nullptr) {
-      sleep1 = LIN_BUS_LISTENER_INSTANCE_1->onSerialEvent();
-    }
-    if (LIN_BUS_LISTENER_INSTANCE_2 != nullptr) {
-      sleep2 = LIN_BUS_LISTENER_INSTANCE_2->onSerialEvent();
-    }
-    // TODO: Reconsider processing lin messages here.
-    // They contain blocking log messages.
-    if (LIN_BUS_LISTENER_INSTANCE_1 != nullptr) {
-      LIN_BUS_LISTENER_INSTANCE_1->process_lin_msg_queue(QUEUE_WAIT_DONT_BLOCK);
-    }
-    if (LIN_BUS_LISTENER_INSTANCE_2 != nullptr) {
-      LIN_BUS_LISTENER_INSTANCE_2->process_lin_msg_queue(QUEUE_WAIT_DONT_BLOCK);
-    }
-    delay(sleep1 > sleep2 ? sleep2 : sleep1);
+// ---------------------------------------------------------------------------
+// FreeRTOS stack-overflow hook (weak symbol override)
+// ---------------------------------------------------------------------------
+extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+  // NOTE: error_count_ and last_error_ are protected members of LinBusListener.
+  // We use the public on_fatal_error_() method to update them from this C function.
+  using esphome::truma_inetbox::g_lin_listener_for_stack_hook;
+
+  static const char *const HOOK_TAG = "truma_inetbox.LinBusListener";
+  ESP_LOGE(HOOK_TAG, "FATAL: stack overflow in task '%s' — system halted.",
+           pcTaskName ? pcTaskName : "?");
+
+  if (g_lin_listener_for_stack_hook != nullptr) {
+    g_lin_listener_for_stack_hook->on_fatal_error_(
+        esphome::truma_inetbox::TrumaErrorCode::ERR_RP2040_STACK_OVERFLOW);
   }
+  for (;;) { tight_loop_contents(); }
 }
 
 #undef QUEUE_WAIT_DONT_BLOCK
+#undef QUEUE_WAIT_BLOCKING
 #undef ESPHOME_UART
 
 #endif  // USE_RP2040
