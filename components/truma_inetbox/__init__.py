@@ -229,6 +229,11 @@ FINAL_VALIDATE_SCHEMA = cv.All(
 )
 
 async def to_code(config):
+    if CORE.is_rp2040:
+        # arduino-pico >= 5.x requires __FREERTOS=1 before any FreeRTOS header.
+        # Injecting via build flags covers all translation units transitively,
+        # including those that include LinBusListener.h indirectly.
+        cg.add_build_flag("-D__FREERTOS=1")
     if CORE.is_esp32 and not CORE.using_arduino:
         # Run interrupt on core 0. ESP Home runs on core 1.
         cg.add_build_flag("-DARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE=0")
