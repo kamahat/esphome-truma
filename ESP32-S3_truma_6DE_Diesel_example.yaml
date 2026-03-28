@@ -4,6 +4,13 @@
 # Truma 6DE                   #
 ###############################
 
+substitutions:
+  tpms_mac:
+   front_left: "00:00:00:00:00:00"
+   front_right: "00:00:00:00:00:00"
+   rear_right: "00:00:00:00:00:00"
+   rear_left: "00:00:00:00:00:00"
+
 esphome:
   name: "truma"
   min_version: "2026.3.1"
@@ -16,6 +23,9 @@ external_components:
     refresh: 24h     # check for updates once a day (recommended)
     # refresh: always  # always download latest (slower builds, use during development)
     # refresh: 0s      # never re-download (fastest builds, no automatic updates)
+    
+packages : 
+  tpms: !include tpms.yaml
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -153,85 +163,6 @@ time:
   - platform: homeassistant
     id: homeassistant_time
 
-# ─── BLE ────────────────────────────────────────────────────────────────────
-esp32_ble_tracker:
-  scan_parameters:
-    interval: 1100ms
-    window: 1100ms
-    active: false
-  on_ble_advertise:
-    - mac_address: "00:00:00:00:00:00"  # Front Left – replace with your sensor MAC
-      then:
-        - lambda: |-
-            for (auto data : x.get_manufacturer_datas()) {
-              if (data.data.size() >= 3) {
-                uint16_t mfr_id    = data.uuid.get_uuid().uuid.uuid16;
-                float battery      = ((mfr_id >> 8) & 0xFF) * 0.1f;
-                float temperature  = (float)data.data[0];
-                uint16_t raw_pres  = (data.data[1] << 8) | data.data[2];
-                float pressure_bar = (raw_pres / 10.0f - 14.696f) / 14.5038f;
-                if (pressure_bar > 0.5f) {
-                  id(tpms_fl_battery).publish_state(battery);
-                  id(tpms_fl_temperature).publish_state(temperature);
-                  id(tpms_fl_pressure).publish_state(pressure_bar);
-                }
-              }
-            }
-    - mac_address: "00:00:00:00:00:00"  # Front Right – replace with your sensor MAC
-      then:
-        - lambda: |-
-            for (auto data : x.get_manufacturer_datas()) {
-              if (data.data.size() >= 3) {
-                uint16_t mfr_id    = data.uuid.get_uuid().uuid.uuid16;
-                float battery      = ((mfr_id >> 8) & 0xFF) * 0.1f;
-                float temperature  = (float)data.data[0];
-                uint16_t raw_pres  = (data.data[1] << 8) | data.data[2];
-                float pressure_bar = (raw_pres / 10.0f - 14.696f) / 14.5038f;
-                if (pressure_bar > 0.5f) {
-                  id(tpms_fr_battery).publish_state(battery);
-                  id(tpms_fr_temperature).publish_state(temperature);
-                  id(tpms_fr_pressure).publish_state(pressure_bar);
-                }
-              }
-            }
-    - mac_address: "00:00:00:00:00:00"  # Rear Right – replace with your sensor MAC
-      then:
-        - lambda: |-
-            for (auto data : x.get_manufacturer_datas()) {
-              if (data.data.size() >= 3) {
-                uint16_t mfr_id    = data.uuid.get_uuid().uuid.uuid16;
-                float battery      = ((mfr_id >> 8) & 0xFF) * 0.1f;
-                float temperature  = (float)data.data[0];
-                uint16_t raw_pres  = (data.data[1] << 8) | data.data[2];
-                float pressure_bar = (raw_pres / 10.0f - 14.696f) / 14.5038f;
-                if (pressure_bar > 0.5f) {
-                  id(tpms_rr_battery).publish_state(battery);
-                  id(tpms_rr_temperature).publish_state(temperature);
-                  id(tpms_rr_pressure).publish_state(pressure_bar);
-                }
-              }
-            }
-    - mac_address: "00:00:00:00:00:00"  # Rear Left – replace with your sensor MAC
-      then:
-        - lambda: |-
-            for (auto data : x.get_manufacturer_datas()) {
-              if (data.data.size() >= 3) {
-                uint16_t mfr_id    = data.uuid.get_uuid().uuid.uuid16;
-                float battery      = ((mfr_id >> 8) & 0xFF) * 0.1f;
-                float temperature  = (float)data.data[0];
-                uint16_t raw_pres  = (data.data[1] << 8) | data.data[2];
-                float pressure_bar = (raw_pres / 10.0f - 14.696f) / 14.5038f;
-                if (pressure_bar > 0.5f) {
-                  id(tpms_rl_battery).publish_state(battery);
-                  id(tpms_rl_temperature).publish_state(temperature);
-                  id(tpms_rl_pressure).publish_state(pressure_bar);
-                }
-              }
-            }
-
-bluetooth_proxy:
-  active: false
-
 # ─── Truma ──────────────────────────────────────────────────────────────────
 truma_inetbox:
   uart_id: lin_uart_bus
@@ -349,106 +280,6 @@ sensor:
     unit_of_measurement: "min"
     accuracy_decimals: 0
     icon: mdi:timer-outline
-    state_class: measurement
-  # TPMS Front Left
-  - platform: template
-    name: "TPMS Front Left Pressure"
-    id: tpms_fl_pressure
-    unit_of_measurement: "bar"
-    accuracy_decimals: 2
-    icon: mdi:tire
-    device_class: pressure
-    state_class: measurement
-  - platform: template
-    name: "TPMS Front Left Temperature"
-    id: tpms_fl_temperature
-    unit_of_measurement: "°C"
-    accuracy_decimals: 0
-    icon: mdi:thermometer
-    device_class: temperature
-    state_class: measurement
-  - platform: template
-    name: "TPMS Front Left Battery"
-    id: tpms_fl_battery
-    unit_of_measurement: "V"
-    accuracy_decimals: 1
-    icon: mdi:battery
-    device_class: voltage
-    state_class: measurement
-  # TPMS Front Right
-  - platform: template
-    name: "TPMS Front Right Pressure"
-    id: tpms_fr_pressure
-    unit_of_measurement: "bar"
-    accuracy_decimals: 2
-    icon: mdi:tire
-    device_class: pressure
-    state_class: measurement
-  - platform: template
-    name: "TPMS Front Right Temperature"
-    id: tpms_fr_temperature
-    unit_of_measurement: "°C"
-    accuracy_decimals: 0
-    icon: mdi:thermometer
-    device_class: temperature
-    state_class: measurement
-  - platform: template
-    name: "TPMS Front Right Battery"
-    id: tpms_fr_battery
-    unit_of_measurement: "V"
-    accuracy_decimals: 1
-    icon: mdi:battery
-    device_class: voltage
-    state_class: measurement
-  # TPMS Rear Right
-  - platform: template
-    name: "TPMS Rear Right Pressure"
-    id: tpms_rr_pressure
-    unit_of_measurement: "bar"
-    accuracy_decimals: 2
-    icon: mdi:tire
-    device_class: pressure
-    state_class: measurement
-  - platform: template
-    name: "TPMS Rear Right Temperature"
-    id: tpms_rr_temperature
-    unit_of_measurement: "°C"
-    accuracy_decimals: 0
-    icon: mdi:thermometer
-    device_class: temperature
-    state_class: measurement
-  - platform: template
-    name: "TPMS Rear Right Battery"
-    id: tpms_rr_battery
-    unit_of_measurement: "V"
-    accuracy_decimals: 1
-    icon: mdi:battery
-    device_class: voltage
-    state_class: measurement
-  # TPMS Rear Left
-  - platform: template
-    name: "TPMS Rear Left Pressure"
-    id: tpms_rl_pressure
-    unit_of_measurement: "bar"
-    accuracy_decimals: 2
-    icon: mdi:tire
-    device_class: pressure
-    state_class: measurement
-  - platform: template
-    name: "TPMS Rear Left Temperature"
-    id: tpms_rl_temperature
-    unit_of_measurement: "°C"
-    accuracy_decimals: 0
-    icon: mdi:thermometer
-    device_class: temperature
-    state_class: measurement
-  - platform: template
-    name: "TPMS Rear Left Battery"
-    id: tpms_rl_battery
-    unit_of_measurement: "V"
-    accuracy_decimals: 1
-    icon: mdi:battery
-    device_class: voltage
     state_class: measurement
 
 script:
