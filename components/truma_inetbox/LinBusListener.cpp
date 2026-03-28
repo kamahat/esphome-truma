@@ -410,7 +410,15 @@ void LinBusListener::process_log_queue(TickType_t xTicksToWait) {
         ESP_LOGVV(TAG, "0x%02X Expected SYNC not found.", current_PID);
         break;
       case QUEUE_LOG_MSG_TYPE::WARN_READ_LIN_FRAME_SID_CRC:
-        ESP_LOGV(TAG, "0x%02X LIN CRC error on SID.", current_PID);
+        // PID 0x00 is the LIN BREAK byte arriving in the SID state — a normal
+        // timing artifact on dense CP Plus buses (multiple slaves, ~35ms frames).
+        // Demote to LOGVV so it never appears in normal operation.
+        // Real PID parity errors (non-zero PID) stay at LOGV for diagnostics.
+        if (current_PID == 0x00) {
+          ESP_LOGVV(TAG, "0x00 BREAK received in SID state — bus timing artifact.");
+        } else {
+          ESP_LOGV(TAG, "0x%02X LIN parity error on SID.", current_PID);
+        }
         break;
       case QUEUE_LOG_MSG_TYPE::WARN_READ_LIN_FRAME_LINv1_CRC:
         ESP_LOGW(TAG, "LIN v1 CRC error");
@@ -427,7 +435,7 @@ void LinBusListener::process_log_queue(TickType_t xTicksToWait) {
                     log_msg.message_source_know ? (log_msg.message_from_master ? " - MASTER" : " - SLAVE") : "",
                     log_msg.current_data_valid ? "" : "INVALID");
         } else {
-          ESP_LOGV(TAG, "PID %02X      %s %s %S", current_PID_, format_hex_pretty(log_msg.data, log_msg.len).c_str(),
+          ESP_LOGV(TAG, "PID %02X      %s %s %s", current_PID_, format_hex_pretty(log_msg.data, log_msg.len).c_str(),
                    log_msg.message_source_know ? (log_msg.message_from_master ? " - MASTER" : " - SLAVE") : "",
                    log_msg.current_data_valid ? "" : "INVALID");
         }
