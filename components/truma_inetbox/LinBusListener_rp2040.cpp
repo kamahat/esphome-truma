@@ -3,20 +3,28 @@
 // LinBusListener_rp2040.cpp — RP2040 backend for the LIN bus listener
 // =============================================================================
 //
-// Architecture (mirrors ESP32 dual-task design):
+// Architecture: two dedicated FreeRTOS tasks (mirrors the ESP32 design)
+// -----------------------------------------------------------------------
+//  lin_uart_task_  — high priority, pinned to Core TRUMA_LIN_TASK_CORE (default: 1)
+//      Polls hardware UART, detects BREAK, calls answer_lin_order_() for real-time
+//      LIN responses, enqueues complete frames in lin_msg_queue_.
 //
-//   lin_uart_task_  — high-priority FreeRTOS task on Core TRUMA_LIN_TASK_CORE (default 1)
-//       Polls hardware UART, detects BREAK, calls answer_lin_order_() in real time,
-//       enqueues complete frames in lin_msg_queue_.
+//  lin_event_task_ — low priority, same core
+//      Blocks on lin_msg_queue_ and dispatches frames to lin_message_recieved_().
 //
-//   lin_event_task_ — low-priority FreeRTOS task on Core TRUMA_LIN_TASK_CORE
-//       Blocks on lin_msg_queue_ and dispatches frames to lin_message_recieved_().
+// WHY NOT loop1()
+// ---------------
+// loop1() is a global weak symbol consumed by the arduino-pico runtime.
+// Any other component that also defines loop1() (sensors using Core 1 for
+// SPI/DMA, BMI160, etc.) causes a linker collision or silent override.
+// Only one definition wins — the LIN bus or the other sensor, never both.
+// Dedicated FreeRTOS tasks with explicit core affinity coexist safely with
+// all other components, just as the ESP32 implementation already does.
 //
-// WHY NOT loop1():
-//   loop1() is a global weak symbol consumed by the arduino-pico runtime.
-//   Any other component that also defines loop1() (sensors using Core 1 for
-//   SPI/DMA, BMI160, etc.) causes a linker collision or silent override —
-//   only one definition wins.  Dedicated FreeRTOS tasks coexist safely.
+// Defensive programming
+// ---------------------
+// Uses TRUMA_GUARD_* macros from LinBusGuards.h instead of try/catch.
+// ESPHome/arduino-pico build with -fno-exceptions: try/catch is dead code.
 // =============================================================================
 
 #include "LinBusListener.h"
@@ -44,11 +52,12 @@ static const char *const TAG = "truma_inetbox.LinBusListener";
 #define QUEUE_WAIT_DONT_BLOCK ((TickType_t) 0)
 #define QUEUE_WAIT_BLOCKING   ((TickType_t) portMAX_DELAY)
 
-// Module-level pointer for the FreeRTOS stack-overflow hook.
+// Module-level pointer so vApplicationStackOverflowHook can call on_fatal_error_().
 static LinBusListener *g_lin_listener_for_stack_hook = nullptr;
 
 // ---------------------------------------------------------------------------
-// Helper: pin a task to a specific core when FreeRTOS SMP is available.
+// Helper: pin a task to a specific core (SMP kernels only).
+// Falls back silently on single-core builds.
 // ---------------------------------------------------------------------------
 static void pin_task_to_core_(TaskHandle_t handle, UBaseType_t core) {
 #if defined(configUSE_CORE_AFFINITY) && (configUSE_CORE_AFFINITY == 1) && (configNUM_CORES > 1)
@@ -66,7 +75,6 @@ static void pin_task_to_core_(TaskHandle_t handle, UBaseType_t core) {
 void LinBusListener::lin_uart_task_(void *args) {
   if (args == nullptr) { vTaskDelete(nullptr); return; }
   LinBusListener *self = static_cast<LinBusListener *>(args);
-
   for (;;) {
     if (self->is_failed()) {
       ESP_LOGW(TAG, "lin_uart_task_: component failed — task exiting.");
@@ -85,7 +93,6 @@ void LinBusListener::lin_uart_task_(void *args) {
 void LinBusListener::lin_event_task_(void *args) {
   if (args == nullptr) { vTaskDelete(nullptr); return; }
   LinBusListener *self = static_cast<LinBusListener *>(args);
-
   for (;;) {
     if (self->is_failed()) {
       ESP_LOGW(TAG, "lin_event_task_: component failed — task exiting.");
@@ -93,13 +100,14 @@ void LinBusListener::lin_event_task_(void *args) {
       vTaskDelete(nullptr);
       return;
     }
+    // Blocks until a complete LIN frame is available.
     self->process_lin_msg_queue(QUEUE_WAIT_BLOCKING);
   }
   vTaskDelete(nullptr);
 }
 
 // ---------------------------------------------------------------------------
-// setup_framework — called once from LinBusListener::setup() on Core 0
+// setup_framework() — called once from LinBusListener::setup() on Core 0
 // ---------------------------------------------------------------------------
 void LinBusListener::setup_framework() {
   TRUMA_GUARD_NOT_NULL(this->parent_, "parent UART in setup_framework",
@@ -107,7 +115,7 @@ void LinBusListener::setup_framework() {
 
   auto *uart_comp = static_cast<ESPHOME_UART *>(this->parent_);
 
-  // Guard: only hardware UART supported; SerialPIO cannot detect BREAK.
+  // Guard: only hardware UART supported — SerialPIO cannot detect BREAK.
   if (!uart_comp->is_hw_serial()) {
     guards_detail::record_error(this->error_count_, this->last_error_,
                                 TrumaErrorCode::ERR_RP2040_NO_HW_SERIAL);
@@ -133,7 +141,7 @@ void LinBusListener::setup_framework() {
     return;
   }
 
-  // Disable FIFO: every byte triggers an event immediately.
+  // Disable FIFO: every received byte triggers an event immediately.
   uart_set_fifo_enabled(this->uart_, false);
 
   g_lin_listener_for_stack_hook = this;
@@ -148,7 +156,7 @@ void LinBusListener::setup_framework() {
   if (ret != pdPASS || this->lin_uart_task_handle_ == nullptr) {
     guards_detail::record_error(this->error_count_, this->last_error_,
                                 TrumaErrorCode::ERR_RP2040_TASK_CREATE);
-    ESP_LOGE(TAG, "Guard[TASK_CREATE]: failed to create lin_uart task.");
+    ESP_LOGE(TAG, "Guard[TASK_CREATE]: failed to create lin_uart task (OOM?).");
     g_lin_listener_for_stack_hook = nullptr;
     this->mark_failed();
     return;
@@ -179,8 +187,8 @@ void LinBusListener::setup_framework() {
 }
 
 // ---------------------------------------------------------------------------
-// onSerialEvent — called by lin_uart_task_
-// Returns recommended poll delay in milliseconds.
+// onSerialEvent() — called by lin_uart_task_ at high priority on Core 1
+// Returns the recommended poll delay in milliseconds.
 // ---------------------------------------------------------------------------
 uint32_t LinBusListener::onSerialEvent() {
   if (this->is_failed()) return 1000;
@@ -192,13 +200,14 @@ uint32_t LinBusListener::onSerialEvent() {
     if ((rsr & UART_UARTRSR_BE_BITS) == UART_UARTRSR_BE_BITS) {
       ESP_LOGVV(TAG, "UART%d RX BREAK detected.", this->uart_number_);
 
-      // BUG FIX: original used || (tautology — always true).
-      // Correct: only force SYNC when NOT already in BREAK or SYNC.
+      // BUG FIX: original code used || (tautological — always true).
+      // Correct intent: only force SYNC state when NOT already in BREAK or SYNC.
       if (this->current_state_ != READ_STATE_BREAK &&
           this->current_state_ != READ_STATE_SYNC) {
         this->current_state_ = READ_STATE_SYNC;
       }
 
+      // Clear the break-error flag in the Receive Status Register.
       hw_clear_bits(&uart_get_hw(this->uart_)->rsr, UART_UARTRSR_BE_BITS);
     }
   }
@@ -217,13 +226,16 @@ uint32_t LinBusListener::onSerialEvent() {
 
 // ---------------------------------------------------------------------------
 // FreeRTOS stack-overflow hook (weak symbol override)
+//
+// The kernel calls this when a task stack overflows.  We report the fault via
+// the public on_fatal_error_() method (error_count_/last_error_ are protected
+// and inaccessible from an extern "C" function) then halt so the watchdog can
+// reset the MCU.
 // ---------------------------------------------------------------------------
 extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
-  // NOTE: error_count_ and last_error_ are protected members of LinBusListener.
-  // We use the public on_fatal_error_() method to update them from this C function.
   using esphome::truma_inetbox::g_lin_listener_for_stack_hook;
-
   static const char *const HOOK_TAG = "truma_inetbox.LinBusListener";
+
   ESP_LOGE(HOOK_TAG, "FATAL: stack overflow in task '%s' — system halted.",
            pcTaskName ? pcTaskName : "?");
 
