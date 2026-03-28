@@ -27,13 +27,15 @@
 #endif  // USE_RP2040
 
 // RP2040: stack sizes for the two dedicated LIN FreeRTOS tasks.
+// Increase TRUMA_LIN_UART_TASK_STACK_SIZE if stack-overflow panics appear.
 #ifndef TRUMA_LIN_UART_TASK_STACK_SIZE
 #define TRUMA_LIN_UART_TASK_STACK_SIZE 2048
 #endif
 #ifndef TRUMA_LIN_EVENT_TASK_STACK_SIZE
 #define TRUMA_LIN_EVENT_TASK_STACK_SIZE 2048
 #endif
-// RP2040: core affinity for LIN tasks (default Core 1, main loop on Core 0).
+// RP2040: core affinity for LIN tasks (default Core 1, ESPHome main on Core 0).
+// Override with -DTRUMA_LIN_TASK_CORE=0 for single-core debugging.
 #ifndef TRUMA_LIN_TASK_CORE
 #define TRUMA_LIN_TASK_CORE 1
 #endif
@@ -80,13 +82,14 @@ class LinBusListener : public PollingComponent, public uart::UARTDevice {
 
   // --- Error telemetry (exposable as ESPHome sensors) ------------------
   uint8_t get_error_count() const { return error_count_; }
-  TrumaErrorCode get_last_error() const { return last_error_; }
-  static const char *error_code_to_str(TrumaErrorCode code);
+  esphome::truma_inetbox::TrumaErrorCode get_last_error() const { return last_error_; }
+  static const char *error_code_to_str(esphome::truma_inetbox::TrumaErrorCode code);
 
-  // Called from vApplicationStackOverflowHook (an extern "C" function that
-  // cannot access protected members). MUST be public.
-  void on_fatal_error_(TrumaErrorCode code) {
-    guards_detail::record_error(this->error_count_, this->last_error_, code);
+  // Called from vApplicationStackOverflowHook (extern "C" — cannot access
+  // protected members directly). MUST remain public.
+  void on_fatal_error_(esphome::truma_inetbox::TrumaErrorCode code) {
+    esphome::truma_inetbox::guards_detail::record_error(
+        this->error_count_, this->last_error_, code);
     this->mark_failed();
   }
 
@@ -97,10 +100,6 @@ class LinBusListener : public PollingComponent, public uart::UARTDevice {
   bool observer_mode_ = false;
 
   void write_lin_answer_(const uint8_t *data, uint8_t len);
-
-  // Error counters — written by TRUMA_GUARD_* macros.
-  uint8_t     error_count_ = 0;
-  TrumaErrorCode last_error_ = TrumaErrorCode::OK;
   bool check_for_lin_fault_();
   virtual bool answer_lin_order_(const uint8_t pid) = 0;
   virtual void lin_message_recieved_(const uint8_t pid, const uint8_t *message, uint8_t length) = 0;
@@ -182,15 +181,28 @@ class LinBusListener : public PollingComponent, public uart::UARTDevice {
   // Guard against double-initialisation.
   bool framework_initialised_ = false;
 
+  // Error counters — written by TRUMA_GUARD_* macros and on_fatal_error_().
+  uint8_t error_count_ = 0;
+  esphome::truma_inetbox::TrumaErrorCode last_error_ =
+      esphome::truma_inetbox::TrumaErrorCode::OK;
+
 #ifdef USE_RP2040
   uint8_t uart_number_ = 0;
   uart_inst_t *uart_ = nullptr;
 
-  // Two dedicated FreeRTOS tasks (mirrors ESP32 dual-task design).
-  // lin_uart_task_  — high priority, reads UART bytes, detects BREAK, answers LIN.
-  // lin_event_task_ — low priority, drains lin_msg_queue_, dispatches frames.
-  // Replaces loop1() which is a global weak symbol that conflicts with other
-  // components needing Core 1 (e.g. BMI160, SPI/DMA sensors).
+  // Two dedicated FreeRTOS tasks — mirrors the ESP32 dual-task design.
+  //
+  //  lin_uart_task_  (high priority, Core TRUMA_LIN_TASK_CORE):
+  //      Polls hardware UART, detects BREAK, calls answer_lin_order_() in
+  //      real time, enqueues complete frames in lin_msg_queue_.
+  //
+  //  lin_event_task_ (low priority, Core TRUMA_LIN_TASK_CORE):
+  //      Blocks on lin_msg_queue_ and dispatches frames to
+  //      lin_message_recieved_().
+  //
+  // Replaces loop1() which is a global weak symbol — any other component
+  // that also defines loop1() (BMI160, SPI/DMA sensors…) silently wins the
+  // linker race and the LIN bus stops working.
   TaskHandle_t lin_uart_task_handle_ = nullptr;
   TaskHandle_t lin_event_task_handle_ = nullptr;
   static void lin_uart_task_(void *args);
