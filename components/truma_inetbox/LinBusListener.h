@@ -1,5 +1,15 @@
 #pragma once
 
+// arduino-pico >= 5.x requires __FREERTOS=1 before any FreeRTOS header.
+// Must be at the very top of this file, before all #include directives.
+#if defined(USE_RP2040) || defined(ARDUINO_ARCH_RP2040)
+#ifndef __FREERTOS
+#define __FREERTOS 1
+#endif
+#endif
+
+
+#include "LinBusGuards.h"
 #include "LinBusLog.h"
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
@@ -13,7 +23,20 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 #include <queue.h>
+#include <task.h>
 #endif  // USE_RP2040
+
+// RP2040: stack sizes for the two dedicated LIN FreeRTOS tasks.
+#ifndef TRUMA_LIN_UART_TASK_STACK_SIZE
+#define TRUMA_LIN_UART_TASK_STACK_SIZE 2048
+#endif
+#ifndef TRUMA_LIN_EVENT_TASK_STACK_SIZE
+#define TRUMA_LIN_EVENT_TASK_STACK_SIZE 2048
+#endif
+// RP2040: core affinity for LIN tasks (default Core 1, main loop on Core 0).
+#ifndef TRUMA_LIN_TASK_CORE
+#define TRUMA_LIN_TASK_CORE 1
+#endif
 
 #ifndef  TRUMA_MSG_QUEUE_LENGTH
 #define TRUMA_MSG_QUEUE_LENGTH 6
@@ -55,6 +78,18 @@ class LinBusListener : public PollingComponent, public uart::UARTDevice {
   uint32_t onSerialEvent();
 #endif  // USE_RP2040
 
+  // --- Error telemetry (exposable as ESPHome sensors) ------------------
+  uint8_t get_error_count() const { return error_count_; }
+  TrumaErrorCode get_last_error() const { return last_error_; }
+  static const char *error_code_to_str(TrumaErrorCode code);
+
+  // Called from vApplicationStackOverflowHook (an extern "C" function that
+  // cannot access protected members). MUST be public.
+  void on_fatal_error_(TrumaErrorCode code) {
+    guards_detail::record_error(this->error_count_, this->last_error_, code);
+    this->mark_failed();
+  }
+
  protected:
   LIN_CHECKSUM lin_checksum_ = LIN_CHECKSUM::LIN_CHECKSUM_VERSION_2;
   GPIOPin *cs_pin_ = nullptr;
@@ -62,6 +97,10 @@ class LinBusListener : public PollingComponent, public uart::UARTDevice {
   bool observer_mode_ = false;
 
   void write_lin_answer_(const uint8_t *data, uint8_t len);
+
+  // Error counters — written by TRUMA_GUARD_* macros.
+  uint8_t     error_count_ = 0;
+  TrumaErrorCode last_error_ = TrumaErrorCode::OK;
   bool check_for_lin_fault_();
   virtual bool answer_lin_order_(const uint8_t pid) = 0;
   virtual void lin_message_recieved_(const uint8_t pid, const uint8_t *message, uint8_t length) = 0;
@@ -140,9 +179,22 @@ class LinBusListener : public PollingComponent, public uart::UARTDevice {
   TaskHandle_t uartEventTaskHandle_;
   static void uartEventTask_(void *args);
 #endif  // USE_ESP32_FRAMEWORK_ESP_IDF
+  // Guard against double-initialisation.
+  bool framework_initialised_ = false;
+
 #ifdef USE_RP2040
   uint8_t uart_number_ = 0;
   uart_inst_t *uart_ = nullptr;
+
+  // Two dedicated FreeRTOS tasks (mirrors ESP32 dual-task design).
+  // lin_uart_task_  — high priority, reads UART bytes, detects BREAK, answers LIN.
+  // lin_event_task_ — low priority, drains lin_msg_queue_, dispatches frames.
+  // Replaces loop1() which is a global weak symbol that conflicts with other
+  // components needing Core 1 (e.g. BMI160, SPI/DMA sensors).
+  TaskHandle_t lin_uart_task_handle_ = nullptr;
+  TaskHandle_t lin_event_task_handle_ = nullptr;
+  static void lin_uart_task_(void *args);
+  static void lin_event_task_(void *args);
 #endif  // USE_RP2040
 };
 
