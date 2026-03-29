@@ -11,6 +11,27 @@ A heartfelt thank you goes to **[Fabian Schmidt](https://github.com/Fabian-Schmi
 This project also builds on the incredible groundwork laid by the [WomoLIN project](https://github.com/muccc/WomoLIN) and [Daniel Fett's inetbox.py](https://github.com/danielfett/inetbox.py), as well as [mc0110's inetbox2mqtt](https://github.com/mc0110/inetbox2mqtt) — their protocol research, log files and documentation have been invaluable.
 
 ---
+## Hardware Requirements
+
+You need a [LIN to UART Transceiver](./docs/linUART.webp) for connecting the ESP32 to the LIN bus.
+
+The connections between ESP32 and LIN trasnceiver :
+ * **TX** connects to GPIO UART RX on ESP (RX).
+ * **RX** connects to GPIO UART TX on ESP (TX).
+ * **GND** connects to a GND ESP.
+The connections between LIN trasnceiver and truma :
+ * **12V** connects to a 12V power supply that also powers the Combi and CP Plus.
+ * **LIN** connects to the RJ12 connector (see below), Pin 3. 
+ * **GND** connects to the RJ12 connector (see below), Pin 5.
+ * The other pins (**INH** and **SLP**) are not used.
+
+ The RJ12 connector (alias 6P6C, the one with 6 pins) goes to any port on the Truma Combi heating, or using a [splitter module](./docs/spliter-rj12.jpg) into the existing connection between Combi and the control panel. Use standard RJ12 cables for the connection. The relevant pins are highlighted in this picture: 
+
+![LIN Pin](./docs/pinout.jpg)
+
+![Connections](./docs/connections.png)
+
+---
 
 ## What this fork adds
 
