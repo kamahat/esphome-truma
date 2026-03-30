@@ -32,8 +32,6 @@ void LinBusListener::setup_framework() {
   uart_intr_config_t uart_intr;
   uart_intr.intr_enable_mask =
       UART_RXFIFO_FULL_INT_ENA_M | UART_RXFIFO_TOUT_INT_ENA_M;  // only these IRQs - no BREAK, PARITY or OVERFLOW
-  // UART_RXFIFO_FULL_INT_ENA_M | UART_RXFIFO_TOUT_INT_ENA_M | UART_FRM_ERR_INT_ENA_M |
-  // UART_RXFIFO_OVF_INT_ENA_M | UART_BRK_DET_INT_ENA_M | UART_PARITY_ERR_INT_ENA_M;
   uart_intr.rxfifo_full_thresh =
       1;  // 1 byte threshold (default 120 would delay first byte significantly)
   uart_intr.rx_timeout_thresh =

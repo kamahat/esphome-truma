@@ -41,22 +41,6 @@ bool LinBusProtocol::answer_lin_order_(const uint8_t pid) {
 
 void LinBusProtocol::lin_message_received_(const uint8_t pid, const uint8_t *message, uint8_t length) {
   if (pid == DIAGNOSTIC_FRAME_MASTER) {
-    // The original Inet Box is answering this message. Works fine without.
-    // std::array<uint8_t, 8> message_array = {};
-    // std::copy(message, message + length, message_array.begin());
-    // if (message_array == this->lin_empty_response_) {
-    //   std::array<uint8_t, 8> response = this->lin_empty_response_;
-    //   response[0] = 0x00;
-    //   response[1] = 0x55;
-    //   response[2] = 0x03;  // this->lin_node_address_;
-    //   response[3] = 0x66;
-    //   response[4] = 0x5B;
-    //   response[5] = 0xA7;
-    //   response[6] = 0x0E;
-    //   response[7] = 0x49;
-    //   this->prepare_update_msg_(response);
-    // }
-
     {
       // auto node_address = message[0];
       bool my_node_address = message[0] == this->lin_node_address_;
