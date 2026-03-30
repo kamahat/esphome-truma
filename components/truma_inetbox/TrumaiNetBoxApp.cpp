@@ -272,7 +272,7 @@ const uint8_t *TrumaiNetBoxApp::lin_multiframe_received(const uint8_t *message, 
     // BB.00.1F.00.1E.00.00.22.FF.FF.FF.54.01.0A.15.00.2B.16.1F.28.01.01.00.00.01.00.00
     this->clock_.set_status(statusFrame->clock);
     return response;
-  } else if (header->message_type == STAUTS_FRAME_CONFIG && header->message_length == sizeof(StatusFrameConfig)) {
+  } else if (header->message_type == STATUS_FRAME_CONFIG && header->message_length == sizeof(StatusFrameConfig)) {
     ESP_LOGI(TAG, "StatusFrameConfig");
     // Example:
     // SID<---------PREAMBLE---------->|<---MSG_HEAD---->|
