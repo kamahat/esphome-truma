@@ -72,11 +72,11 @@ uint32_t LinBusListener::onSerialEvent() {
   if (this->current_state_ == READ_STATE_BREAK) {
     // Next is a break. CP Plus has an inter data break of ~35ms
     auto current = micros();
-    if ((this->last_data_recieved_ + (1000 * 1000 /* 1 second */)) < current) {
-      // I have not recieved data for a while. Sleep deeper
+    if ((this->last_data_received_ + (1000 * 1000 /* 1 second */)) < current) {
+      // I have not received data for a while. Sleep deeper
       return 750;
-    } else if ((this->last_data_recieved_ + (50 * 1000 /* 0.1 second */)) < current) {
-      // I have not recieved data for a while. Sleep deep
+    } else if ((this->last_data_received_ + (50 * 1000 /* 0.1 second */)) < current) {
+      // I have not received data for a while. Sleep deep
       return 50;
     } else {
       // Expecting a SYNC.

@@ -30,7 +30,7 @@ void LinBusListener::setup_framework() {
 
   auto uart_num = uartComp->get_hw_serial_number();
 
-  // Tweak the fifo settings so data is available as soon as the first byte is recieved.
+  // Tweak the fifo settings so data is available as soon as the first byte is received.
   // If not it will wait either until fifo is filled or a certain time has passed.
   uart_intr_config_t uart_intr;
   uart_intr.intr_enable_mask =

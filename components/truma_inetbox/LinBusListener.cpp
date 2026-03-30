@@ -156,7 +156,7 @@ void LinBusListener::onReceive_() {
   if (!this->check_for_lin_fault_()) {
     while (this->available()) {
       this->read_lin_frame_();
-      this->last_data_recieved_ = micros();
+      this->last_data_received_ = micros();
     }
   }
 }
@@ -271,7 +271,7 @@ void LinBusListener::read_lin_frame_() {
       break;
     case READ_STATE_DATA: {
       auto current = micros();
-      if (current > (this->last_data_recieved_ + this->time_per_first_byte_)) {
+      if (current > (this->last_data_received_ + this->time_per_first_byte_)) {
         // timeout occured.
         this->current_state_ = READ_STATE_BREAK;
         return;
@@ -359,7 +359,7 @@ void LinBusListener::clear_uart_buffer_() {
 void LinBusListener::process_lin_msg_queue(TickType_t xTicksToWait) {
   QUEUE_LIN_MSG lin_msg;
   while (xQueueReceive(this->lin_msg_queue_, &lin_msg, xTicksToWait) == pdPASS) {
-    this->lin_message_recieved_(lin_msg.current_PID, lin_msg.data, lin_msg.len);
+    this->lin_message_received_(lin_msg.current_PID, lin_msg.data, lin_msg.len);
   }
 }
 
