@@ -1,0 +1,49 @@
+
+# ─── Onboard RGB LED ─────────────────────────────────────────────────────────
+# Waveshare ESP32-S3-DEV-KIT-N8R8: WS2812 RGB LED on GPIO38, RGB color order
+# https://www.waveshare.com/wiki/ESP32-S3-DEV-KIT-N8R8
+# Green blink (every 2 s, 500 ms): CP Plus connected – LIN bus active
+# Blue flash  (300 ms):            TX command sent to heater
+# Off:                             CP Plus not connected (after 90 s timeout)
+
+globals:
+  - id: led_color  # 1 = green (alive)  2 = blue (TX)
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: led_ticks  # Countdown in 100 ms steps
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: onboard_led
+    pin: GPIO8
+    num_leds: 1
+    chipset: WS2812
+    rgb_order: RGB
+    internal: true
+
+interval:
+  - interval: 2s        # LED alive indicator: green when CP Plus connected
+    then:
+      - lambda: |-
+          if (id(cp_plus_alive).state) { id(led_color) = 1; id(led_ticks) = 5; }
+
+  - interval: 100ms     # LED driver: show color, count down ticks
+    then:
+      - lambda: |-
+          if (id(led_ticks) > 0) {
+            id(led_ticks) -= 1;
+            auto call = id(onboard_led)->turn_on();
+            if (id(led_color) == 1) call.set_rgb(0.0, 1.0, 0.0);  // green
+            else                    call.set_rgb(0.0, 0.3, 1.0);  // blue
+            call.set_brightness(0.15);
+            call.set_transition_length(0);
+            call.perform();
+          } else {
+            auto call = id(onboard_led)->turn_off();
+            call.set_transition_length(0);
+            call.perform();
+          }
