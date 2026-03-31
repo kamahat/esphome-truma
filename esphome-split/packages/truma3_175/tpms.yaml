@@ -1,0 +1,104 @@
+
+# ─── ESPHOME ─────────────────────────────────────────────────────────────────
+
+esphome:
+  includes:
+    - packages/truma3_175/tpms_helpers.h
+    
+# ─── SENSOR Ancles────────────────────────────────────────────────────────────────────<
+
+.tpms_pressure: &tpms_pressure
+  platform: template
+  unit_of_measurement: "bar"
+  accuracy_decimals: 2
+  icon: mdi:tire
+  device_class: pressure
+  state_class: measurement
+
+.tpms_temperature: &tpms_temperature
+  platform: template
+  unit_of_measurement: "°C"
+  accuracy_decimals: 0
+  icon: mdi:thermometer
+  device_class: temperature
+  state_class: measurement
+
+.tpms_battery: &tpms_battery
+  platform: template
+  unit_of_measurement: "V"
+  accuracy_decimals: 1
+  icon: mdi:battery
+  device_class: voltage
+  state_class: measurement
+# ─── BLE ─────────────────────────────────────────────────────────────────────
+
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+    active: false
+    continuous: false
+  on_ble_advertise:
+    - mac_address: ${tpms_mac.front_left}
+      then:
+        - lambda: tpms_parse(x, id(tpms_fl_battery), id(tpms_fl_temperature), id(tpms_fl_pressure));
+
+    - mac_address: ${tpms_mac.front_right}
+      then:
+        - lambda: tpms_parse(x, id(tpms_fr_battery), id(tpms_fr_temperature), id(tpms_fr_pressure));
+
+    - mac_address: ${tpms_mac.rear_right}
+      then:
+        - lambda: tpms_parse(x, id(tpms_rr_battery), id(tpms_rr_temperature), id(tpms_rr_pressure));
+
+    - mac_address: ${tpms_mac.rear_left}
+      then:
+        - lambda: tpms_parse(x, id(tpms_rl_battery), id(tpms_rl_temperature), id(tpms_rl_pressure));
+
+bluetooth_proxy:
+  active: false
+# ─── SENSOR ────────────────────────────────────────────────────────────────────<
+sensor:
+  # Front Left
+  - <<: *tpms_pressure
+    name: "TPMS Front Left Pressure"
+    id: tpms_fl_pressure
+  - <<: *tpms_temperature
+    name: "TPMS Front Left Temperature"
+    id: tpms_fl_temperature
+  - <<: *tpms_battery
+    name: "TPMS Front Left Battery"
+    id: tpms_fl_battery
+
+  # Front Right
+  - <<: *tpms_pressure
+    name: "TPMS Front Right Pressure"
+    id: tpms_fr_pressure
+  - <<: *tpms_temperature
+    name: "TPMS Front Right Temperature"
+    id: tpms_fr_temperature
+  - <<: *tpms_battery
+    name: "TPMS Front Right Battery"
+    id: tpms_fr_battery
+
+  # Rear Right
+  - <<: *tpms_pressure
+    name: "TPMS Rear Right Pressure"
+    id: tpms_rr_pressure
+  - <<: *tpms_temperature
+    name: "TPMS Rear Right Temperature"
+    id: tpms_rr_temperature
+  - <<: *tpms_battery
+    name: "TPMS Rear Right Battery"
+    id: tpms_rr_battery
+
+  # Rear Left
+  - <<: *tpms_pressure
+    name: "TPMS Rear Left Pressure"
+    id: tpms_rl_pressure
+  - <<: *tpms_temperature
+    name: "TPMS Rear Left Temperature"
+    id: tpms_rl_temperature
+  - <<: *tpms_battery
+    name: "TPMS Rear Left Battery"
+    id: tpms_rl_battery
