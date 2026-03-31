@@ -13,16 +13,15 @@ namespace truma_inetbox {
 // - 2/3 STATUS_FRAME_DEVICES
 // - STATUS_FRAME_HEATER
 // - STATUS_FRAME_TIMER
-// - STAUTS_FRAME_CONFIG
+// - STATUS_FRAME_CONFIG
 // - STATUS_FRAME_CLOCK
 #define STATUS_FRAME_RESPONSE_INIT_REQUEST 0x0A
 #define STATUS_FRAME_DEVICES 0x0B
 #define STATUS_FRAME_RESPONSE_ACK 0x0D
 #define STATUS_FRAME_CLOCK_RESPONSE (STATUS_FRAME_CLOCK - 1)
 #define STATUS_FRAME_CLOCK 0x15
-// TODO: Documentation and testing of config response.
-#define STAUTS_FRAME_CONFIG_RESPONSE (STAUTS_FRAME_CONFIG - 1)
-#define STAUTS_FRAME_CONFIG 0x17
+#define STATUS_FRAME_CONFIG_RESPONSE (STATUS_FRAME_CONFIG - 1)
+#define STATUS_FRAME_CONFIG 0x17
 #define STATUS_FRAME_HEATER_RESPONSE (STATUS_FRAME_HEATER - 1)
 #define STATUS_FRAME_HEATER 0x33
 #define STATUS_FRAME_AIRCON_MANUAL_RESPONSE (STATUS_FRAME_AIRCON_MANUAL - 1)
@@ -180,7 +179,6 @@ struct StatusFrameDevice {  // NOLINT(altera-struct-pack-align)
 } __attribute__((packed));
 
 // Length 18 (0x12)
-// TODO
 struct StatusFrameAirconManual {  // NOLINT(altera-struct-pack-align)
   AirconMode mode;
   // 0x00
@@ -216,7 +214,6 @@ struct StatusFrameAirconManualResponse {  // NOLINT(altera-struct-pack-align)
 } __attribute__((packed));
 
 // Length 22 (0x16)
-// TODO
 struct StatusFrameAirconManualInit {  // NOLINT(altera-struct-pack-align)
   uint8_t unknown_01;                // 0x00
   uint8_t unknown_02;                // 0x00
@@ -243,7 +240,6 @@ struct StatusFrameAirconManualInit {  // NOLINT(altera-struct-pack-align)
 } __attribute__((packed));
 
 // Length 18 (0x12)
-// TODO
 struct StatusFrameAirconAuto {  // NOLINT(altera-struct-pack-align)
   EnergyMix energy_mix_a;
   uint8_t unknown_02;  // 0x00
@@ -260,7 +256,6 @@ struct StatusFrameAirconAuto {  // NOLINT(altera-struct-pack-align)
   TargetTemp target_temp;
 } __attribute__((packed));
 
-// TODO
 struct StatusFrameAirconAutoResponse {  // NOLINT(altera-struct-pack-align)
   EnergyMix energy_mix_a;
   uint8_t unknown_02;  // 0x00
@@ -276,7 +271,6 @@ struct StatusFrameAirconAutoResponse {  // NOLINT(altera-struct-pack-align)
 } __attribute__((packed));
 
 // Length 20 (0x14)
-// TODO
 struct StatusFrameAirconAutoInit {  // NOLINT(altera-struct-pack-align)
   EnergyMix energy_mix_a;
   uint8_t unknown_02;  // 0x00

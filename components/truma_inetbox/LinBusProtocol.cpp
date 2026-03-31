@@ -39,24 +39,8 @@ bool LinBusProtocol::answer_lin_order_(const uint8_t pid) {
   return false;
 }
 
-void LinBusProtocol::lin_message_recieved_(const uint8_t pid, const uint8_t *message, uint8_t length) {
+void LinBusProtocol::lin_message_received_(const uint8_t pid, const uint8_t *message, uint8_t length) {
   if (pid == DIAGNOSTIC_FRAME_MASTER) {
-    // The original Inet Box is answering this message. Works fine without.
-    // std::array<uint8_t, 8> message_array = {};
-    // std::copy(message, message + length, message_array.begin());
-    // if (message_array == this->lin_empty_response_) {
-    //   std::array<uint8_t, 8> response = this->lin_empty_response_;
-    //   response[0] = 0x00;
-    //   response[1] = 0x55;
-    //   response[2] = 0x03;  // this->lin_node_address_;
-    //   response[3] = 0x66;
-    //   response[4] = 0x5B;
-    //   response[5] = 0xA7;
-    //   response[6] = 0x0E;
-    //   response[7] = 0x49;
-    //   this->prepare_update_msg_(response);
-    // }
-
     {
       // auto node_address = message[0];
       bool my_node_address = message[0] == this->lin_node_address_;
@@ -187,7 +171,7 @@ void LinBusProtocol::lin_msg_diag_first_(const uint8_t *message, uint8_t length)
   this->multi_pdu_message_len_ = 0;
   this->multi_pdu_message_frame_counter_ = 1;
 
-  // Copy recieved message over to `multi_pdu_message_` buffer.
+  // Copy received message over to `multi_pdu_message_` buffer.
   for (size_t i = 3; i < 8; i++) {
     this->multi_pdu_message_[this->multi_pdu_message_len_++] = message[i];
   }
@@ -210,7 +194,7 @@ bool LinBusProtocol::lin_msg_diag_consecutive_(const uint8_t *message, uint8_t l
     this->multi_pdu_message_frame_counter_ = 0x00;
   }
 
-  // Copy recieved message over to `multi_pdu_message_` buffer.
+  // Copy received message over to `multi_pdu_message_` buffer.
   for (uint8_t i = 2; i < 8; i++) {
     if (this->multi_pdu_message_len_ < this->multi_pdu_message_expected_size_) {
       this->multi_pdu_message_[this->multi_pdu_message_len_++] = message[i];
@@ -227,7 +211,7 @@ void LinBusProtocol::lin_msg_diag_multi_() {
 
   uint8_t answer_len = 0;
   // Ask handling class what to answer to this request.
-  auto answer = this->lin_multiframe_recieved(this->multi_pdu_message_, this->multi_pdu_message_len_, &answer_len);
+  auto answer = this->lin_multiframe_received(this->multi_pdu_message_, this->multi_pdu_message_len_, &answer_len);
   if (answer_len > 0) {
     ESP_LOGD(TAG, "Multi package response %s", format_hex_pretty(answer, answer_len).c_str());
 

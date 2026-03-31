@@ -21,7 +21,7 @@ class TrumaiNetBoxAppClock : public TrumaStausFrameStorage<StatusFrameClock>, pu
  protected:
   // The behaviour of `update_status_clock_unsubmitted_` is special.
   // Just an update is marked. The actual package is prepared when CP Plus asks for the data in the
-  // `lin_multiframe_recieved` method.
+  // `lin_multiframe_received` method.
   bool update_status_unsubmitted_ = false;
 #else
   constexpr bool has_update() const { return false; }
