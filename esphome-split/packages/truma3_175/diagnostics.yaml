@@ -1,0 +1,52 @@
+# packages/truma3_175/diagnostics.yaml
+# =============================================================================
+# Diagnostic de connectivité au boot et en opération
+#   - PCF8563 : lecture de l'heure au boot + log toutes les heures
+#   - Truma   : état CP Plus loggé au boot + toutes les 5 min
+# =============================================================================
+
+esphome:
+  on_boot:
+    priority: -200   # Après tous les composants initialisés
+    then:
+      # --- PCF8563 : vérification heure RTC ---
+      - lambda: |-
+          auto rtc = id(pcf8563_time).now();
+          if (rtc.is_valid()) {
+            ESP_LOGI("diag", "PCF8563 OK — heure RTC : %04d-%02d-%02d %02d:%02d:%02d",
+              rtc.year, rtc.month, rtc.day_of_month,
+              rtc.hour, rtc.minute, rtc.second);
+          } else {
+            ESP_LOGE("diag", "PCF8563 ERREUR — heure invalide (I2C absent ou batterie RTC vide ?)");
+          }
+      # --- Truma : confirmation config UART ---
+      - lambda: |-
+          ESP_LOGI("diag", "Truma UART configure : TX=GPIO21  RX=GPIO22  9600 8N2");
+          ESP_LOGI("diag", "Truma CP Plus : %s",
+            id(cp_plus_alive).state ? "CONNECTE" : "en attente de la premiere trame LIN");
+
+interval:
+  # --- PCF8563 : bilan horaire ---
+  - interval: 1h
+    startup_delay: 10s
+    then:
+      - lambda: |-
+          auto rtc = id(pcf8563_time).now();
+          if (rtc.is_valid()) {
+            ESP_LOGI("diag", "PCF8563 OK — %04d-%02d-%02d %02d:%02d:%02d",
+              rtc.year, rtc.month, rtc.day_of_month,
+              rtc.hour, rtc.minute, rtc.second);
+          } else {
+            ESP_LOGE("diag", "PCF8563 ERREUR — heure invalide");
+          }
+
+  # --- Truma : bilan toutes les 5 min ---
+  - interval: 5min
+    startup_delay: 30s
+    then:
+      - lambda: |-
+          if (id(cp_plus_alive).state) {
+            ESP_LOGI("diag", "Truma OK — CP Plus connecte et actif");
+          } else {
+            ESP_LOGW("diag", "Truma WARN — CP Plus non detecte (bus LIN silencieux)");
+          }
