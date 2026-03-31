@@ -1,0 +1,26 @@
+# ----------------- TEMPS (RTC PCF8563 + HA) -----------------
+time:
+  - platform: pcf8563
+    id: pcf8563_time
+    update_interval: never
+    address: 0x51       #default 0xA3
+  # - platform: homeassistant
+  #   #id: homeassistant_time
+  #   on_time_sync:
+  #      then:
+  #        # ... and update the RTC when the synchronization was successful
+  #        pcf8563.write_time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Paris"
+    update_interval: 4h
+    on_time_sync:
+       then:
+         # ... and update the RTC when the synchronization was successful
+         pcf8563.write_time:
+
+esphome:
+  on_boot:
+    then:
+      # read the RTC time once when the system boots
+      pcf8563.read_time:
