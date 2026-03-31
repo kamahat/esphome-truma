@@ -1,0 +1,113 @@
+# -----------------------------------
+# ### Câblage transceiver (TJA1020 ou MCP2003B)
+# ```
+# ESP32-C6 Zero       Transceiver LIN
+#─────────────       ───────────────
+# GPIO21 (TX)    →     TXD
+# GPIO22 (RX)    ←     RXD
+#  3V3           →     VCC (logique 3.3V)
+# GND           →     GND
+#                    VBB  ← 12V batterie van
+#                    LIN  ↔ bus Truma (fil LIN)
+
+substitutions:
+  device_name: "truma3-175"
+  friendly_name: "Truma3_Test"
+  device_description: "TEST : Truma sur ESP-C6"
+  device_area: "Camping-Car"
+  version: "3.3"
+  board:
+    flash_size : 4MB
+    variant: esp32c6
+  net:
+    octet1: "175"
+    IP1: 10.104.30.${net.octet1}
+    IP2: 192.168.80.${net.octet1}
+  tpms_mac:
+   front_left: "00:00:00:00:00:00"
+   front_right: "00:00:00:00:00:00"
+   rear_right: "00:00:00:00:00:00"
+   rear_left: "00:00:00:00:00:00"
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  # area: ${device_area}${net.octet1}
+  min_version: "2026.3.1"
+  project:
+    name: "syssi.truma"
+    version: ${version}
+esp32:
+  board: esp32-c6-devkitm-1
+  variant: ${board.variant}
+  flash_size: ${board.flash_size}
+  framework:
+    type: esp-idf
+    version: recommended
+    sdkconfig_options:
+      CONFIG_ESPTOOLPY_FLASHSIZE_4MB: y
+      # PSRAM (OPI/OctalSPI for N16R8)
+      CONFIG_SPIRAM: "y"
+      CONFIG_SPIRAM_MODE_OCT: "y"
+      CONFIG_SPIRAM_SPEED_80M: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
+      CONFIG_SPIRAM_RODATA: "y"
+      # Offload BLE stack to PSRAM
+      CONFIG_BT_ALLOCATION_FROM_SPIRAM_FIRST: "y"
+      CONFIG_BT_BLE_DYNAMIC_ENV_MEMORY: "y"
+  cpu_frequency: 80MHz    # 80 MHz suffit pour ce use case
+
+packages : 
+  wifi: !include packages/truma3_175/wifi.yaml
+  device_base: !include common/base.yaml
+  truma: !include packages/truma3_175/truma.yaml
+  time: !include packages/truma3_175/time.yaml
+  network-service: !include common/network-service.yaml
+  status_led: !include packages/truma3_175/status_led.yaml
+  diagnostics:  !include packages/truma3_175/diagnostics.yaml 
+  #tpms: !include packages/truma3_175/tpms.yaml
+
+# Enable logging
+logger:
+    #level: DEBUG
+    level: INFO
+    baud_rate: 115200
+
+# Enable Home Assistant API
+api:
+  encryption:
+    # key: !secret api_key_rpipicow-1
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+    # on_begin:
+    #   then:
+    #     - switch.turn_off: ble_client_switch0
+    #     - logger.log: "BLE connection suspended for OTA update"
+
+# pas de webserver avec RP4020
+web_server:
+  local: true
+  include_internal: true
+
+# ----------------- BUS UART (Pico W) -----------------
+uart:
+  - id: lin_uart_bus
+    tx_pin: GPIO21 # vert => TXD du lin
+    rx_pin: GPIO22 # rouge => RXD du lin
+    baud_rate: 9600
+    data_bits: 8
+    parity: NONE
+    stop_bits: 2
+
+
+# ----------------- I2C -----------------
+i2c:
+  sda: GPIO19   # bleu
+  scl: GPIO20   # vert
+  # scan: false
+  scan: true
+  id: i2c_bus_a
+  # low_power_mode: true  # pour réduire la consommation du bus I2 espc6
+
