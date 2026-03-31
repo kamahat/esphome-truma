@@ -28,7 +28,9 @@ The connections between LIN trasnceiver and truma :
  * **GND** connects to the RJ12 connector (see below), Pin 5.
  * The other pins (**INH** and **SLP**) are not used.
 
- The RJ12 connector (alias 6P6C, the one with 6 pins) goes to any port on the Truma Combi heating, or using a [splitter module](./docs/spliter-rj12.jpg) into the existing connection between Combi and the control panel. Use standard RJ12 cables for the connection. The relevant pins are highlighted in this picture: 
+ The RJ12 connector (alias 6P6C, the one with 6 pins) goes to any port on the Truma Combi heating, or using a [splitter module](./docs/spliter-rj12.jpg) into the existing connection between Combi and the control panel. Use standard RJ12 cables for the connection. The relevant pins are highlighted in this following pictures: 
+
+![Schema](./docs/Schema-cabling.jpg)
 
 ![LIN Pin](./docs/pinout.jpg)
 
