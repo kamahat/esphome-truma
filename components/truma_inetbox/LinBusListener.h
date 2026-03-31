@@ -64,7 +64,7 @@ class LinBusListener : public PollingComponent, public uart::UARTDevice {
   void write_lin_answer_(const uint8_t *data, uint8_t len);
   bool check_for_lin_fault_();
   virtual bool answer_lin_order_(const uint8_t pid) = 0;
-  virtual void lin_message_recieved_(const uint8_t pid, const uint8_t *message, uint8_t length) = 0;
+  virtual void lin_message_received_(const uint8_t pid, const uint8_t *message, uint8_t length) = 0;
 
  private:
   // Microseconds per UART Baud
@@ -100,7 +100,7 @@ class LinBusListener : public PollingComponent, public uart::UARTDevice {
   // up to 8 byte data frame + CRC
   uint8_t current_data_[9] = {};
   // // Time when the last LIN data was available.
-  uint32_t last_data_recieved_ = 0;
+  uint32_t last_data_received_ = 0;
 
   void current_state_reset_() {
     this->current_state_ = READ_STATE_BREAK;

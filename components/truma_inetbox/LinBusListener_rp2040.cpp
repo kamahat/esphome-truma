@@ -59,8 +59,7 @@ uint32_t LinBusListener::onSerialEvent() {
 
     if ((receive_status_register & UART_UARTRSR_BE_BITS) == UART_UARTRSR_BE_BITS) {
       ESP_LOGVV(TAG, "UART%d RX break.", this->uart_number_);
-      // If the break is valid the `onReceive` is called first and the break is handeld. Therfore the expectation is
-      // that the state should be in waiting for `SYNC`.
+      // If break is valid, onReceive is called first and handled — state should be waiting for SYNC.
       if (this->current_state_ != READ_STATE_BREAK || this->current_state_ != READ_STATE_SYNC) {
         this->current_state_ = READ_STATE_SYNC;
       }
@@ -73,11 +72,11 @@ uint32_t LinBusListener::onSerialEvent() {
   if (this->current_state_ == READ_STATE_BREAK) {
     // Next is a break. CP Plus has an inter data break of ~35ms
     auto current = micros();
-    if ((this->last_data_recieved_ + (1000 * 1000 /* 1 second */)) < current) {
-      // I have not recieved data for a while. Sleep deeper
+    if ((this->last_data_received_ + (1000 * 1000 /* 1 second */)) < current) {
+      // I have not received data for a while. Sleep deeper
       return 750;
-    } else if ((this->last_data_recieved_ + (50 * 1000 /* 0.1 second */)) < current) {
-      // I have not recieved data for a while. Sleep deep
+    } else if ((this->last_data_received_ + (50 * 1000 /* 0.1 second */)) < current) {
+      // I have not received data for a while. Sleep deep
       return 50;
     } else {
       // Expecting a SYNC.
@@ -105,7 +104,6 @@ extern void loop1() {
     if (LIN_BUS_LISTENER_INSTANCE_2 != nullptr) {
       sleep2 = LIN_BUS_LISTENER_INSTANCE_2->onSerialEvent();
     }
-    // TODO: Reconsider processing lin messages here.
     // They contain blocking log messages.
     if (LIN_BUS_LISTENER_INSTANCE_1 != nullptr) {
       LIN_BUS_LISTENER_INSTANCE_1->process_lin_msg_queue(QUEUE_WAIT_DONT_BLOCK);

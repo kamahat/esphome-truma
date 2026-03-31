@@ -19,8 +19,8 @@ TrumaiNetBoxApp::TrumaiNetBoxApp() {
 }
 
 void TrumaiNetBoxApp::update() {
-  // Call listeners in after method 'lin_multiframe_recieved' call.
-  // Because 'lin_multiframe_recieved' is time critical an all these sensors can take some time.
+  // Call listeners in after method 'lin_multiframe_received' call.
+  // Because 'lin_multiframe_received' is time critical an all these sensors can take some time.
 
   // Run through callbacks
   this->airconAuto_.update();
@@ -36,9 +36,9 @@ void TrumaiNetBoxApp::update() {
   // Update time of CP Plus automatically when
   // - Time component configured
   // - Update was not done
-  // - 30 seconds after init data recieved
-  if (this->time_ != nullptr && !this->update_status_clock_done && this->init_recieved_ > 0) {
-    if (micros() > ((30 * 1000 * 1000) + this->init_recieved_ /* 30 seconds after init recieved */)) {
+  // - 30 seconds after init data received
+  if (this->time_ != nullptr && !this->update_status_clock_done && this->init_received_ > 0) {
+    if (micros() > ((30 * 1000 * 1000) + this->init_received_ /* 30 seconds after init received */)) {
       this->update_status_clock_done = true;
       this->clock_.action_write_time();
     }
@@ -73,7 +73,7 @@ void TrumaiNetBoxApp::lin_heartbeat() { this->device_registered_ = micros(); }
 void TrumaiNetBoxApp::lin_reset_device() {
   LinBusProtocol::lin_reset_device();
   this->device_registered_ = micros();
-  this->init_recieved_ = 0;
+  this->init_received_ = 0;
 
   this->airconAuto_.reset();
   this->airconManual_.reset();
@@ -125,7 +125,7 @@ bool TrumaiNetBoxApp::lin_read_field_by_identifier_(uint8_t identifier, std::arr
   return false;
 }
 
-const uint8_t *TrumaiNetBoxApp::lin_multiframe_recieved(const uint8_t *message, const uint8_t message_len,
+const uint8_t *TrumaiNetBoxApp::lin_multiframe_received(const uint8_t *message, const uint8_t message_len,
                                                          uint8_t *return_len) {
   static uint8_t response[48] = {};
   // Validate message prefix.
@@ -148,7 +148,7 @@ const uint8_t *TrumaiNetBoxApp::lin_multiframe_recieved(const uint8_t *message, 
     auto response_frame = reinterpret_cast<StatusFrame *>(response);
 
     // The order must match with the method 'has_update_to_submit_'.
-    if (this->init_recieved_ == 0) {
+    if (this->init_received_ == 0) {
       ESP_LOGD(TAG, "Requested read: Sending init");
       status_frame_create_init(response_frame, return_len, this->message_counter++);
       return response;
@@ -272,7 +272,7 @@ const uint8_t *TrumaiNetBoxApp::lin_multiframe_recieved(const uint8_t *message, 
     // BB.00.1F.00.1E.00.00.22.FF.FF.FF.54.01.0A.15.00.2B.16.1F.28.01.01.00.00.01.00.00
     this->clock_.set_status(statusFrame->clock);
     return response;
-  } else if (header->message_type == STAUTS_FRAME_CONFIG && header->message_length == sizeof(StatusFrameConfig)) {
+  } else if (header->message_type == STATUS_FRAME_CONFIG && header->message_length == sizeof(StatusFrameConfig)) {
     ESP_LOGI(TAG, "StatusFrameConfig");
     // Example:
     // SID<---------PREAMBLE---------->|<---MSG_HEAD---->|
@@ -305,7 +305,7 @@ const uint8_t *TrumaiNetBoxApp::lin_multiframe_recieved(const uint8_t *message, 
     return response;
   } else if (header->message_type == STATUS_FRAME_DEVICES && header->message_length == sizeof(StatusFrameDevice)) {
     ESP_LOGI(TAG, "StatusFrameDevice");
-    // This message is special. I recieve one response per registered (at CP plus) device.
+    // This message is special. I receive one response per registered (at CP plus) device.
     // Example:
     // SID<---------PREAMBLE---------->|<---MSG_HEAD---->|count|st|??|Hardware|Software|??|??
     // Combi4
@@ -354,11 +354,11 @@ const uint8_t *TrumaiNetBoxApp::lin_multiframe_recieved(const uint8_t *message, 
 
     if (device.device_count == 2 && this->heater_device_ != TRUMA_DEVICE::UNKNOWN) {
       // Assumption 2 devices mean CP Plus and Heater.
-      this->init_recieved_ = micros();
+      this->init_received_ = micros();
     } else if (device.device_count == 3 && this->heater_device_ != TRUMA_DEVICE::UNKNOWN &&
                this->aircon_device_ != TRUMA_DEVICE::UNKNOWN) {
       // Assumption 3 devices mean CP Plus, Heater and Aircon.
-      this->init_recieved_ = micros();
+      this->init_received_ = micros();
     }
 
     return response;
@@ -377,7 +377,7 @@ bool TrumaiNetBoxApp::has_update_to_submit_() {
     this->init_requested_ = micros();
     // ESP_LOGD(TAG, "Requesting initial data.");
     return true;
-  } else if (this->init_recieved_ == 0) {
+  } else if (this->init_received_ == 0) {
     auto init_wait_time = micros() - this->init_requested_;
     // it has been 5 seconds and i am still awaiting the init data.
     if (init_wait_time > 1000 * 1000 * 5) {

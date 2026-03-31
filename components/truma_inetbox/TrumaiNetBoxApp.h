@@ -48,7 +48,7 @@ class TrumaiNetBoxApp : public LinBusProtocol {
   // Truma CP Plus needs init (reset). This device is not registered.
   uint32_t device_registered_ = 0;
   uint32_t init_requested_ = 0;
-  uint32_t init_recieved_ = 0;
+  uint32_t init_received_ = 0;
   uint8_t message_counter = 1;
 
   // Truma heater conected to CP Plus.
@@ -76,7 +76,7 @@ class TrumaiNetBoxApp : public LinBusProtocol {
   bool answer_lin_order_(const uint8_t pid) override;
 
   bool lin_read_field_by_identifier_(uint8_t identifier, std::array<uint8_t, 5> *response) override;
-  const uint8_t *lin_multiframe_recieved(const uint8_t *message, const uint8_t message_len,
+  const uint8_t *lin_multiframe_received(const uint8_t *message, const uint8_t message_len,
                                           uint8_t *return_len) override;
 
   bool has_update_to_submit_();

@@ -34,7 +34,7 @@ bool TrumaiNetBoxAppClock::action_write_time() {
 
   // The behaviour of this method is special.
   // Just an update is marked. The actual package is prepared when CP Plus asks for the data in the
-  // `lin_multiframe_recieved` method.
+  // `lin_multiframe_received` method.
   this->update_submit();
   return true;
 }
