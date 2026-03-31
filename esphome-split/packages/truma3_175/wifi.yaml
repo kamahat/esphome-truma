@@ -1,0 +1,78 @@
+wifi:
+  networks:
+  - ssid: !secret wifi_ssid_cc
+    password: !secret wifi_ssid_password_cc
+    priority: 100
+    manual_ip:
+      static_ip: ${net.IP1}
+      gateway: 10.104.30.254
+      subnet: 255.255.255.0
+  - ssid: !secret wifi_ssid_2
+    password: !secret wifi_ssid_password_2
+    priority: -50
+  fast_connect: false
+  output_power: 10dB
+  power_save_mode: light
+  reboot_timeout: 20min
+  enable_rrm: true  # Enable 802.11k Radio Resource Management support.
+  enable_btm: true  # Enable 802.11v BSS Transition Management support.
+  min_auth_mode: WPA
+  domain: !secret net_domain
+  on_connect:
+    - logger.log: "WiFi CONNECTED"
+  on_disconnect:
+    - logger.log: "WiFi DISCONNECTED"
+
+interval:
+  - interval: 5min
+    startup_delay: 2min
+    then:
+      - if:
+          condition:
+            not:
+              wifi.connected:
+          then:
+            - logger.log: "WiFi lost → Soft-Reconnect"
+            - wifi.disable:
+            - delay: 5s
+            - wifi.enable:
+# Expose Wifi signal 
+sensor:
+
+  - platform: wifi_signal
+    name: ${device_name} Wifi Signal Strength CC
+    id: wifi_signal_3
+    update_interval: 60s
+    #unit_of_measurement: dBm
+    accuracy_decimals: 0
+    force_update: false
+    entity_category: "diagnostic"
+    icon: mdi:wifi
+    filters:
+      - round: 0
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_3
+    name: "WiFi Signal Percent CC"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+    device_class: ""
+
+text_sensor:
+  # IP address #
+  - platform: wifi_info
+    ip_address:
+      name: "CC ${device_name} IP address"
+      id: ip_address_cc
+      icon: "mdi:IP"
+      address_0:
+        name: CC ESP IP Address 0
+      address_1:
+        name: CC ESP IP Address 1
+    ssid:
+      name: "CC ${device_name} Connected SSID"
+      icon: "mdi:wifi"
+    bssid:
+      name: "CC ${device_name} Connected BSSID"
+      icon: "mdi:wifi"
