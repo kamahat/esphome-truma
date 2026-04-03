@@ -20,10 +20,19 @@ cassants supplémentaires liés à ESP-IDF 5.x (chaîne d'outils ESP32) et aux
 modifications d'API ESPHome 2026.x ont également été corrigés.
 
 Testé avec :
-- ESPHome **2026.3.1** — Arduino + ESP-IDF ✅
-- ESPHome **2026.3.0** — Arduino + ESP-IDF ✅
-- ESPHome **2026.2.2** — Arduino + ESP-IDF ✅
-- ESPHome **2025.9.3** — Arduino + ESP-IDF ✅
+- ESPHome **2026.3.2** — ESP-IDF ✅
+- ESPHome **2026.3.1** — ESP-IDF ✅
+- ESPHome **2026.3.0** — ESP-IDF ✅
+- ESPHome **2026.2.2** — ESP-IDF ✅
+- ESPHome **2025.9.3** — ESP-IDF ✅
+
+---
+
+## [1.0.9] — 2026-04-02 — Nettoyage
+
+### Modifié
+- Timeouts codés en dur remplacés par des constantes `constexpr` nommées
+- `const` ajouté à la variable locale `lin_identifier`
 
 ---
 
