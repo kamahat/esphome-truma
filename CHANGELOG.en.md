@@ -19,11 +19,24 @@ ESP-IDF builds. Additional breaking changes in ESP-IDF 5.x (ESP32 toolchain) and
 ESPHome 2026.x API changes were also resolved.
 
 Tested against:
+- ESPHome **2026.3.3** — ESP-IDF ✅
 - ESPHome **2026.3.2** — ESP-IDF ✅
 - ESPHome **2026.3.1** — ESP-IDF ✅
 - ESPHome **2026.3.0** — ESP-IDF ✅
 - ESPHome **2026.2.2** — ESP-IDF ✅
 - ESPHome **2025.9.3** — ESP-IDF ✅
+
+---
+
+## [1.0.10] — 2026-04-11 — Further cleanup
+
+### Changed
+- Removed duplicate macro definitions of `DIAGNOSTIC_FRAME_MASTER` / `DIAGNOSTIC_FRAME_SLAVE` from two `.cpp` files and consolidated them as a single `constexpr` in `LinBusListener.h`
+- Replaced magic number `1440` with named constant `MINUTES_PER_DAY`
+- Implemented `dump_data()` in the heater module: logs target temperatures, heating mode, energy mix, power level, and operating status at DEBUG level; logs error codes at WARN level
+- Corrected misleading comment on the consistency guard in `action_heater_energy_mix()`
+- Fixed wrong label `"Truma Climate"` in `TrumaWaterClimate::dump_config()` to `"Truma Water Climate"`
+- Removed commented-out preset code and dead options loop
 
 ---
 
